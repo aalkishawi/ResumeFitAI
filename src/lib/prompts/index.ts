@@ -46,18 +46,34 @@ export const TAILOR_SYSTEM_PROMPT = [
   EXPORT_FORMAT_PROMPT,
   TRUTHFULNESS_VALIDATION_PROMPT,
   INTERVIEW_PROMPT,
-  `## Combined output shape
-Return one JSON object with exactly these top-level keys:
+  `# OUTPUT FORMAT
+Return your response in EXACTLY this structure, with nothing before, between,
+or after the marked blocks other than what is described:
+
+===TAILORED_RESUME_START===
+<the complete tailored resume as clean Markdown>
+===TAILORED_RESUME_END===
+===JSON_START===
+<a single JSON object with the metadata keys listed below>
+===JSON_END===
+
+Put the tailored resume ONLY between the resume markers as plain Markdown — do
+NOT wrap it in quotes, do NOT escape it, and do NOT place it inside the JSON.
+
+The block between ===JSON_START=== and ===JSON_END=== must be a SINGLE valid
+JSON object with EXACTLY these keys (and NOT a "tailoredResume" key):
 {
-  "tailoredResume": "markdown string",
   "scoreAfter": {...},
   "changes": [...],
   "keywordGaps": [...],
   "missingSkillSuggestions": [...],
   "interviewTalkingPoints": [...],
   "unsupportedClaims": [...]
-}`,
-  JSON_RULES,
+}
+
+JSON rules for that block: no markdown code fences, no commentary. All string
+arrays must be arrays (use [] when empty). All scores must be integers 0-100.
+Do not include any keys other than those listed.`,
 ].join("\n\n");
 
 /** Build the user message for the analysis call. */

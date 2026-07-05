@@ -150,7 +150,7 @@ function tryParse(s: string): { ok: true; value: unknown } | { ok: false } {
  * occasionally be wrapped in prose/code fences or contain unescaped control
  * characters inside string values.
  */
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
   const trimmed = raw.trim();
 
   // Strip ```json ... ``` fences if present.
@@ -171,58 +171,54 @@ function extractJson(raw: string): unknown {
   throw new Error("The AI response was not valid JSON.");
 }
 
-/**
- * Call Claude with a system prompt and a user message, expecting a JSON object.
- */
-export async function callJson<T = unknown>(params: {
+export interface CallParams {
   system: string;
   user: string;
   maxTokens?: number;
-  /**
-   * JSON Schema for the expected response. When provided, the API is constrained
-   * to emit output matching this schema (Structured Outputs). This GUARANTEES
-   * syntactically valid JSON via constrained decoding — the model cannot produce
-   * malformed JSON, which eliminates parse failures from unescaped quotes or
-   * newlines in string values (e.g. a markdown resume).
-   */
-  schema?: Record<string, unknown>;
   /**
    * Deprecated/ignored. Newer models (e.g. claude-sonnet-5) reject the
    * `temperature` parameter, so it is no longer forwarded to the API. Kept in
    * the signature so existing callers don't need to change.
    */
   temperature?: number;
-}): Promise<T> {
+}
+
+/** Call Claude and return the raw text of the response. */
+export async function callText(params: CallParams): Promise<string> {
   const client = getClient();
-  // Stream the response. Large max_tokens values (needed so the tailoring JSON
-  // isn't truncated mid-object) can exceed the SDK's non-streaming HTTP timeout,
+  // Stream the response. Large max_tokens values (needed so a long tailored
+  // resume isn't truncated) can exceed the SDK's non-streaming HTTP timeout,
   // so we always stream and collect the final message.
   const stream = client.messages.stream({
     model: DEFAULT_MODEL,
     max_tokens: params.maxTokens ?? 8192,
     // Disable extended thinking. On claude-sonnet-5 adaptive thinking is ON by
     // default (when `thinking` is omitted), and thinking tokens count against
-    // max_tokens — they were eating the budget and truncating the JSON output.
-    // This is structured extraction, so we don't need thinking; give the whole
+    // max_tokens — they were eating the budget and truncating the output. This
+    // is structured extraction, so we don't need thinking; give the whole
     // budget to the response.
     thinking: { type: "disabled" },
-    ...(params.schema
-      ? { output_config: { format: { type: "json_schema" as const, schema: params.schema } } }
-      : {}),
     system: params.system,
     messages: [{ role: "user", content: params.user }],
   });
   const message = await stream.finalMessage();
 
-  // A truncated response (hit max_tokens) yields incomplete JSON. Detect it
+  // A truncated response (hit max_tokens) yields incomplete output. Detect it
   // explicitly so the user gets an actionable message instead of a generic
   // parse failure.
   if (message.stop_reason === "max_tokens") {
     throw new Error(
-      "The AI response was cut off (max_tokens reached) before valid JSON could be produced."
+      "The AI response was cut off (max_tokens reached) before it finished."
     );
   }
 
-  const text = textFromMessage(message);
+  return textFromMessage(message);
+}
+
+/**
+ * Call Claude with a system prompt and a user message, expecting a JSON object.
+ */
+export async function callJson<T = unknown>(params: CallParams): Promise<T> {
+  const text = await callText(params);
   return extractJson(text) as T;
 }

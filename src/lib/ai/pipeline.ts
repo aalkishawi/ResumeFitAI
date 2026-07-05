@@ -1,4 +1,4 @@
-import { callJson, DEFAULT_MODEL } from "./client";
+import { callJson, callText, extractJson, DEFAULT_MODEL } from "./client";
 import {
   ANALYZE_SYSTEM_PROMPT,
   TAILOR_SYSTEM_PROMPT,
@@ -170,6 +170,47 @@ function normalizeUnsupported(raw: unknown): UnsupportedClaim[] {
 // every field, so a stray extra key or wrong type can't reach the frontend.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Tailoring response format. The tailored resume is a large free-form Markdown
+// document; embedding it inside a JSON string is fragile because unescaped
+// quotes/newlines in the resume break JSON.parse. Instead the model returns the
+// resume as raw text between sentinels, and only the (small, structured)
+// metadata as JSON — so the fragile part never has to be JSON-escaped.
+// ---------------------------------------------------------------------------
+
+const RESUME_START = "===TAILORED_RESUME_START===";
+const RESUME_END = "===TAILORED_RESUME_END===";
+const JSON_START = "===JSON_START===";
+const JSON_END = "===JSON_END===";
+
+/** Return the text between two markers, or null if either marker is missing. */
+function sliceBetween(s: string, start: string, end: string): string | null {
+  const i = s.indexOf(start);
+  if (i === -1) return null;
+  const j = s.indexOf(end, i + start.length);
+  if (j === -1) return null;
+  return s.slice(i + start.length, j).trim();
+}
+
+/**
+ * Parse the tailoring response into the raw resume Markdown and the metadata
+ * object. Prefers the sentinel format; falls back to the legacy single-JSON
+ * shape (where `tailoredResume` was a key) if the markers aren't present.
+ */
+function parseTailorOutput(raw: string): {
+  tailoredResume: string;
+  meta: Record<string, unknown>;
+} {
+  const resume = sliceBetween(raw, RESUME_START, RESUME_END);
+  const jsonBlock = sliceBetween(raw, JSON_START, JSON_END);
+  if (resume !== null && jsonBlock !== null) {
+    return { tailoredResume: resume, meta: rec(extractJson(jsonBlock)) };
+  }
+  // Fallback: whole response is one JSON object with a tailoredResume key.
+  const obj = rec(extractJson(raw));
+  return { tailoredResume: str(obj.tailoredResume), meta: obj };
+}
+
 export interface PipelineInput {
   resume: string;
   jobDescription: string;
@@ -206,16 +247,17 @@ export async function runPipeline(input: PipelineInput): Promise<AnalysisResult>
   });
 
   // ---- Call 2: tailoring + validation + interview + after-score ----------
-  const tailorRaw = rec(
-    await callJson({
-      system: TAILOR_SYSTEM_PROMPT,
-      user: buildTailorUserPrompt({ resume, jobDescription, instruction, analysisJson }),
-      maxTokens: 32000,
-      temperature: 0.45,
-    })
-  );
+  const tailorText = await callText({
+    system: TAILOR_SYSTEM_PROMPT,
+    user: buildTailorUserPrompt({ resume, jobDescription, instruction, analysisJson }),
+    maxTokens: 32000,
+    temperature: 0.45,
+  });
 
-  const tailoredResume = sanitizeText(str(tailorRaw.tailoredResume));
+  const { tailoredResume: tailoredResumeRaw, meta: tailorRaw } =
+    parseTailorOutput(tailorText);
+
+  const tailoredResume = sanitizeText(tailoredResumeRaw);
   const scoreAfter = normalizeScore(tailorRaw.scoreAfter);
 
   return {
