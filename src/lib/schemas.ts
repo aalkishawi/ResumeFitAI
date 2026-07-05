@@ -19,6 +19,10 @@ export const analyzeRequestSchema = z.object({
     .max(2000, "Instruction is too long (max 2000 characters).")
     .optional()
     .default(""),
+  mode: z
+    .enum(["economy", "balanced", "premium", "local"])
+    .optional()
+    .default("balanced"),
 });
 
 export type AnalyzeRequest = z.infer<typeof analyzeRequestSchema>;

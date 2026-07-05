@@ -18,7 +18,7 @@ export class MissingApiKeyError extends Error {
 
 let cachedClient: Anthropic | null = null;
 
-function getClient(): Anthropic {
+export function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new MissingApiKeyError();
   if (!cachedClient) {
@@ -80,7 +80,7 @@ export function describeApiError(err: unknown): string {
 }
 
 /** Pull all text out of a Claude message response. */
-function textFromMessage(message: Anthropic.Message): string {
+export function textFromMessage(message: Anthropic.Message): string {
   return message.content
     .filter((block): block is Anthropic.TextBlock => block.type === "text")
     .map((block) => block.text)

@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       resume: parsed.data.resume,
       jobDescription: parsed.data.jobDescription,
       instruction: parsed.data.instruction,
+      mode: parsed.data.mode,
     });
     return NextResponse.json({ result });
   } catch (err) {

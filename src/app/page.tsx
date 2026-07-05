@@ -28,10 +28,24 @@ const LOADING_STEPS = [
   "Running the truthfulness check…",
 ];
 
+type Mode = "economy" | "balanced" | "premium" | "local";
+
+const MODE_OPTIONS: {
+  id: Mode;
+  label: string;
+  hint: string;
+}[] = [
+  { id: "economy", label: "Economy", hint: "Fastest & cheapest — great quality" },
+  { id: "balanced", label: "Balanced", hint: "Best default for most resumes" },
+  { id: "premium", label: "Premium", hint: "Strongest model — executive-level" },
+  { id: "local", label: "Local", hint: "Runs on your own Ollama / vLLM server" },
+];
+
 export default function HomePage() {
   const [resume, setResume] = useState("");
   const [jd, setJd] = useState("");
   const [instruction, setInstruction] = useState("");
+  const [mode, setMode] = useState<Mode>("balanced");
 
   const [loading, setLoading] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -79,7 +93,7 @@ export default function HomePage() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resume, jobDescription: jd, instruction }),
+        body: JSON.stringify({ resume, jobDescription: jd, instruction, mode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -186,6 +200,40 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Mode selector */}
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-800">Tailoring mode</h2>
+          <span className="text-xs text-slate-400">
+            Choose your cost / quality balance
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {MODE_OPTIONS.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className={cx(
+                "rounded-xl border p-3 text-left transition",
+                mode === m.id
+                  ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100"
+                  : "border-slate-200 bg-white hover:border-slate-300"
+              )}
+            >
+              <div
+                className={cx(
+                  "text-sm font-semibold",
+                  mode === m.id ? "text-brand-700" : "text-slate-700"
+                )}
+              >
+                {m.label}
+              </div>
+              <div className="mt-0.5 text-xs text-slate-400">{m.hint}</div>
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* Action bar */}
       <div className="mt-5 flex flex-col items-center gap-3">
         <button
@@ -265,6 +313,29 @@ export default function HomePage() {
       {/* Results */}
       {result && !loading ? (
         <section ref={resultsRef} className="mt-10">
+          {result.usage ? (
+            <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
+              <span className="font-medium text-slate-700">
+                {result.usage.mode.charAt(0).toUpperCase() + result.usage.mode.slice(1)} mode
+              </span>
+              <span>
+                Models:{" "}
+                {Array.from(new Set(result.usage.calls.map((c) => c.model))).join(", ") || "—"}
+              </span>
+              <span>
+                {result.usage.inputTokens.toLocaleString()} in /{" "}
+                {result.usage.outputTokens.toLocaleString()} out tokens
+              </span>
+              <span className="font-medium text-slate-700">
+                ~${result.usage.costUsd.toFixed(4)}
+              </span>
+              {result.usage.cached ? (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700">
+                  cached · $0
+                </span>
+              ) : null}
+            </div>
+          ) : null}
           <ResultsView result={result} />
         </section>
       ) : null}

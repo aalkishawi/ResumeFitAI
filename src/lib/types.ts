@@ -93,6 +93,26 @@ export interface InterviewTalkingPoint {
   sampleQuestion: string;
 }
 
+/** Per-call cost/token record surfaced to the client. */
+export interface CallUsage {
+  task: string;
+  provider: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+}
+
+/** Aggregate cost/token usage for one analyze run. */
+export interface RunUsageInfo {
+  calls: CallUsage[];
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  cached: boolean;
+  mode: string;
+}
+
 /** Combined result returned by POST /api/analyze. */
 export interface AnalysisResult {
   instruction: InstructionAnalysis;
@@ -106,6 +126,8 @@ export interface AnalysisResult {
   missingSkillSuggestions: string[];
   interviewTalkingPoints: InterviewTalkingPoint[];
   unsupportedClaims: UnsupportedClaim[];
+  /** Cost/model transparency for this run (optional; present when tracked). */
+  usage?: RunUsageInfo;
 }
 
 export interface ExtractResult {

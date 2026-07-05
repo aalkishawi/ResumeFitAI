@@ -1,4 +1,8 @@
-import { callJson, callText, extractJson, DEFAULT_MODEL } from "./client";
+import { extractJson } from "./client";
+import { providerForAnalysis, providerForTailoring } from "./router";
+import { addCall, emptyRunUsage, recordRun } from "./cost";
+import { runtimeConfig, type Mode } from "./models";
+import { cacheKey, getCached, setCached } from "./cache";
 import {
   ANALYZE_SYSTEM_PROMPT,
   TAILOR_SYSTEM_PROMPT,
@@ -215,23 +219,39 @@ export interface PipelineInput {
   resume: string;
   jobDescription: string;
   instruction: string;
+  /** Cost/quality mode. Defaults to "balanced". */
+  mode?: Mode;
 }
 
 /** Run the full analyze -> tailor pipeline and return a normalized result. */
 export async function runPipeline(input: PipelineInput): Promise<AnalysisResult> {
+  const mode: Mode = input.mode ?? "balanced";
   const resume = clampLength(sanitizeText(input.resume));
   const jobDescription = clampLength(sanitizeText(input.jobDescription));
   const instruction = sanitizeText(input.instruction);
 
-  // ---- Call 1: analysis + before-score -----------------------------------
-  const analysisRaw = rec(
-    await callJson({
-      system: ANALYZE_SYSTEM_PROMPT,
-      user: buildAnalyzeUserPrompt({ resume, jobDescription, instruction }),
-      maxTokens: 8000,
-      temperature: 0.3,
-    })
-  );
+  // ---- Cache: skip the whole pipeline for an identical prior run ----------
+  const key = cacheKey({ resume, jobDescription, instruction, mode });
+  const cached = getCached(key);
+  if (cached) {
+    return {
+      ...cached,
+      usage: cached.usage ? { ...cached.usage, cached: true } : undefined,
+    };
+  }
+
+  const usage = emptyRunUsage();
+
+  // ---- Call 1: analysis + before-score (routed to the economy tier) ------
+  const analysisProvider = providerForAnalysis(mode);
+  const analysisRes = await analysisProvider.generateText({
+    system: ANALYZE_SYSTEM_PROMPT,
+    user: buildAnalyzeUserPrompt({ resume, jobDescription, instruction }),
+    maxTokens: 8000,
+    task: "analysis",
+  });
+  addCall(usage, { task: "analysis", ...analysisRes.usage, ...pickMeta(analysisRes) });
+  const analysisRaw = rec(extractJson(analysisRes.text));
 
   const instructionAnalysis = normalizeInstruction(analysisRaw.instruction);
   const jd = normalizeJd(analysisRaw.jd);
@@ -246,21 +266,38 @@ export async function runPipeline(input: PipelineInput): Promise<AnalysisResult>
     scoreBefore,
   });
 
-  // ---- Call 2: tailoring + validation + interview + after-score ----------
-  const tailorText = await callText({
+  // ---- Call 2: tailoring (routed to balanced/premium by mode) ------------
+  const tailoringProvider = providerForTailoring(mode);
+  const tailorRes = await tailoringProvider.generateText({
     system: TAILOR_SYSTEM_PROMPT,
     user: buildTailorUserPrompt({ resume, jobDescription, instruction, analysisJson }),
     maxTokens: 32000,
-    temperature: 0.45,
+    task: "tailoring",
   });
+  addCall(usage, { task: "tailoring", ...tailorRes.usage, ...pickMeta(tailorRes) });
 
   const { tailoredResume: tailoredResumeRaw, meta: tailorRaw } =
-    parseTailorOutput(tailorText);
+    parseTailorOutput(tailorRes.text);
 
   const tailoredResume = sanitizeText(tailoredResumeRaw);
   const scoreAfter = normalizeScore(tailorRaw.scoreAfter);
 
-  return {
+  // ---- Cost accounting: log, warn on threshold, record -------------------
+  recordRun(usage, mode, Date.now());
+  if (runtimeConfig.costLogging) {
+    console.log(
+      `[cost] mode=${mode} $${usage.costUsd.toFixed(4)} ` +
+        `in=${usage.inputTokens} out=${usage.outputTokens} ` +
+        usage.calls.map((c) => `${c.task}:${c.model}`).join(" ")
+    );
+  }
+  if (usage.costUsd > runtimeConfig.maxCostPerRun) {
+    console.warn(
+      `[cost] run exceeded MAX_COST_PER_RUN ($${usage.costUsd.toFixed(4)} > $${runtimeConfig.maxCostPerRun})`
+    );
+  }
+
+  const result: AnalysisResult = {
     instruction: instructionAnalysis,
     jd,
     resume: resumeAnalysis,
@@ -272,7 +309,14 @@ export async function runPipeline(input: PipelineInput): Promise<AnalysisResult>
     missingSkillSuggestions: strArr(tailorRaw.missingSkillSuggestions),
     interviewTalkingPoints: normalizeTalkingPoints(tailorRaw.interviewTalkingPoints),
     unsupportedClaims: normalizeUnsupported(tailorRaw.unsupportedClaims),
+    usage: { ...usage, mode },
   };
+
+  setCached(key, result);
+  return result;
 }
 
-export const PIPELINE_MODEL = DEFAULT_MODEL;
+/** Extract the provider/model/cost fields from a generate result for logging. */
+function pickMeta(r: { provider: string; model: string; costUsd: number }) {
+  return { provider: r.provider, model: r.model, costUsd: r.costUsd };
+}
