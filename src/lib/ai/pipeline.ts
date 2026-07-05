@@ -1,0 +1,220 @@
+import { callJson, DEFAULT_MODEL } from "./client";
+import {
+  ANALYZE_SYSTEM_PROMPT,
+  TAILOR_SYSTEM_PROMPT,
+  buildAnalyzeUserPrompt,
+  buildTailorUserPrompt,
+} from "@/lib/prompts";
+import { clampLength, sanitizeText } from "@/lib/sanitize";
+import type {
+  AnalysisResult,
+  ChangeItem,
+  InstructionAnalysis,
+  InterviewTalkingPoint,
+  JDAnalysis,
+  KeywordGap,
+  ResumeAnalysis,
+  ScoreBreakdown,
+  UnsupportedClaim,
+} from "@/lib/types";
+
+// ---------------------------------------------------------------------------
+// The orchestration pipeline. Runs the two AI calls and normalizes the output
+// so the frontend can rely on every field being present and well-typed.
+// ---------------------------------------------------------------------------
+
+/** Coerce an unknown value into a string-keyed record for safe property reads. */
+const rec = (v: unknown): Record<string, unknown> =>
+  v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+
+const asArray = <T>(v: unknown, map: (x: unknown) => T): T[] =>
+  Array.isArray(v) ? v.map(map).filter((x) => x !== null && x !== undefined) : [];
+
+const str = (v: unknown, fallback = ""): string =>
+  typeof v === "string" ? v : v == null ? fallback : String(v);
+
+const strArr = (v: unknown): string[] =>
+  asArray<string>(v, (x) => str(x)).filter((s) => s.trim().length > 0);
+
+const clampScore = (v: unknown): number => {
+  const n = typeof v === "number" ? v : parseInt(str(v, "0"), 10);
+  if (Number.isNaN(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+};
+
+function normalizeScore(input: unknown): ScoreBreakdown {
+  const raw = rec(input);
+  return {
+    overall: clampScore(raw.overall),
+    skills: clampScore(raw.skills),
+    experience: clampScore(raw.experience),
+    tools: clampScore(raw.tools),
+    keywordAlignment: clampScore(raw.keywordAlignment),
+    seniorityAlignment: clampScore(raw.seniorityAlignment),
+    explanation: str(raw.explanation),
+    wellRepresented: strArr(raw.wellRepresented),
+    missingKeywords: strArr(raw.missingKeywords),
+    underusedKeywords: strArr(raw.underusedKeywords),
+    instructionImpact: str(raw.instructionImpact),
+  };
+}
+
+function normalizeInstruction(input: unknown): InstructionAnalysis {
+  const raw = rec(input);
+  return {
+    tone: str(raw.tone, "professional (default)"),
+    length: str(raw.length, "unspecified"),
+    seniority: str(raw.seniority, "unspecified"),
+    targetRole: str(raw.targetRole),
+    emphasis: strArr(raw.emphasis),
+    outputFormat: (str(raw.outputFormat, "unspecified") as InstructionAnalysis["outputFormat"]),
+    interpretation: str(raw.interpretation),
+    conflicts: strArr(raw.conflicts),
+  };
+}
+
+function normalizeJd(input: unknown): JDAnalysis {
+  const raw = rec(input);
+  return {
+    jobTitle: str(raw.jobTitle, "Unknown role"),
+    seniority: str(raw.seniority, "unspecified"),
+    requiredSkills: strArr(raw.requiredSkills),
+    preferredSkills: strArr(raw.preferredSkills),
+    tools: strArr(raw.tools),
+    methodologies: strArr(raw.methodologies),
+    certifications: strArr(raw.certifications),
+    responsibilities: strArr(raw.responsibilities),
+    domainKeywords: strArr(raw.domainKeywords),
+    highPriorityKeywords: strArr(raw.highPriorityKeywords),
+    qualificationThemes: strArr(raw.qualificationThemes),
+  };
+}
+
+function normalizeResume(input: unknown): ResumeAnalysis {
+  const raw = rec(input);
+  return {
+    contact: str(raw.contact),
+    summary: str(raw.summary),
+    skills: strArr(raw.skills),
+    experience: strArr(raw.experience),
+    projects: strArr(raw.projects),
+    education: strArr(raw.education),
+    certifications: strArr(raw.certifications),
+    strengths: strArr(raw.strengths),
+    missingKeywords: strArr(raw.missingKeywords),
+    irrelevantContent: strArr(raw.irrelevantContent),
+    vagueBullets: strArr(raw.vagueBullets),
+    instructionAlignment: strArr(raw.instructionAlignment),
+  };
+}
+
+function normalizeChanges(raw: unknown): ChangeItem[] {
+  return asArray<ChangeItem>(raw, (item) => {
+    const x = rec(item);
+    return {
+      section: str(x.section, "General"),
+      change: str(x.change),
+      rationale: str(x.rationale),
+    };
+  }).filter((c) => c.change.trim().length > 0);
+}
+
+function normalizeKeywordGaps(raw: unknown): KeywordGap[] {
+  const valid = new Set(["present", "underused", "missing"]);
+  return asArray<KeywordGap>(raw, (item) => {
+    const x = rec(item);
+    const status = str(x.status, "missing").toLowerCase();
+    return {
+      keyword: str(x.keyword),
+      status: (valid.has(status) ? status : "missing") as KeywordGap["status"],
+      suggestion: str(x.suggestion),
+    };
+  }).filter((k) => k.keyword.trim().length > 0);
+}
+
+function normalizeTalkingPoints(raw: unknown): InterviewTalkingPoint[] {
+  return asArray<InterviewTalkingPoint>(raw, (item) => {
+    const x = rec(item);
+    return {
+      topic: str(x.topic, "Talking point"),
+      point: str(x.point),
+      sampleQuestion: str(x.sampleQuestion),
+    };
+  }).filter((t) => t.point.trim().length > 0);
+}
+
+function normalizeUnsupported(raw: unknown): UnsupportedClaim[] {
+  return asArray<UnsupportedClaim>(raw, (item) => {
+    const x = rec(item);
+    return {
+      claim: str(x.claim),
+      reason: str(x.reason),
+      ethicalAlternative: str(x.ethicalAlternative),
+    };
+  }).filter((u) => u.claim.trim().length > 0);
+}
+
+export interface PipelineInput {
+  resume: string;
+  jobDescription: string;
+  instruction: string;
+}
+
+/** Run the full analyze -> tailor pipeline and return a normalized result. */
+export async function runPipeline(input: PipelineInput): Promise<AnalysisResult> {
+  const resume = clampLength(sanitizeText(input.resume));
+  const jobDescription = clampLength(sanitizeText(input.jobDescription));
+  const instruction = sanitizeText(input.instruction);
+
+  // ---- Call 1: analysis + before-score -----------------------------------
+  const analysisRaw = rec(
+    await callJson({
+      system: ANALYZE_SYSTEM_PROMPT,
+      user: buildAnalyzeUserPrompt({ resume, jobDescription, instruction }),
+      maxTokens: 4096,
+      temperature: 0.3,
+    })
+  );
+
+  const instructionAnalysis = normalizeInstruction(analysisRaw.instruction);
+  const jd = normalizeJd(analysisRaw.jd);
+  const resumeAnalysis = normalizeResume(analysisRaw.resume);
+  const scoreBefore = normalizeScore(analysisRaw.scoreBefore);
+
+  // Compact analysis JSON handed to the tailoring call for grounding.
+  const analysisJson = JSON.stringify({
+    instruction: instructionAnalysis,
+    jd,
+    resume: resumeAnalysis,
+    scoreBefore,
+  });
+
+  // ---- Call 2: tailoring + validation + interview + after-score ----------
+  const tailorRaw = rec(
+    await callJson({
+      system: TAILOR_SYSTEM_PROMPT,
+      user: buildTailorUserPrompt({ resume, jobDescription, instruction, analysisJson }),
+      maxTokens: 12000,
+      temperature: 0.45,
+    })
+  );
+
+  const tailoredResume = sanitizeText(str(tailorRaw.tailoredResume));
+  const scoreAfter = normalizeScore(tailorRaw.scoreAfter);
+
+  return {
+    instruction: instructionAnalysis,
+    jd,
+    resume: resumeAnalysis,
+    scoreBefore,
+    scoreAfter,
+    tailoredResume,
+    changes: normalizeChanges(tailorRaw.changes),
+    keywordGaps: normalizeKeywordGaps(tailorRaw.keywordGaps),
+    missingSkillSuggestions: strArr(tailorRaw.missingSkillSuggestions),
+    interviewTalkingPoints: normalizeTalkingPoints(tailorRaw.interviewTalkingPoints),
+    unsupportedClaims: normalizeUnsupported(tailorRaw.unsupportedClaims),
+  };
+}
+
+export const PIPELINE_MODEL = DEFAULT_MODEL;

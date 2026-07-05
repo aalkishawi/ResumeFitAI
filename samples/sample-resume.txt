@@ -1,0 +1,41 @@
+Jordan A. Rivera
+Denver, CO | jordan.rivera@example.com | (555) 201-8890 | linkedin.com/in/jordanrivera
+
+PROFESSIONAL SUMMARY
+Technology leader with 16 years of experience building and running IT and
+engineering organizations. Track record of modernizing systems, leading cloud
+initiatives, and partnering with business leaders to deliver measurable results.
+
+EXPERIENCE
+
+VP of Information Technology — Cascade Regional Medical Group
+2018 - Present
+- Led IT organization of 60 staff across infrastructure, applications, and support.
+- Directed a cloud migration program moving core hospital systems to Microsoft Azure.
+- Launched a data analytics initiative that gave clinical leaders better visibility into patient flow.
+- Oversaw cybersecurity program and HIPAA compliance efforts across the organization.
+- Managed an annual technology budget of approximately $28M and multiple vendor relationships.
+- Introduced Agile delivery practices that reduced project delivery timelines.
+
+Director of IT Infrastructure — Summit Financial Services
+2012 - 2018
+- Managed enterprise infrastructure, networking, and data center operations.
+- Led a security modernization effort improving the company's risk posture.
+- Standardized ITIL-based service management processes across teams.
+- Supervised a team of 25 engineers and administrators.
+
+IT Manager — BlueRiver Logistics
+2008 - 2012
+- Managed help desk and systems administration for a 400-person company.
+- Implemented backup and disaster recovery improvements.
+
+EDUCATION
+B.S., Computer Science — University of Colorado Boulder
+
+CERTIFICATIONS
+- ITIL Foundation
+- Certified Information Systems Security Professional (CISSP)
+
+SKILLS
+Cloud (Azure), cybersecurity, IT strategy, team leadership, budgeting, data
+analytics, Agile, ITIL, vendor management, disaster recovery.

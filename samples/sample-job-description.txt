@@ -1,0 +1,34 @@
+Chief Information Officer (CIO)
+Company: Northwind Health Systems
+
+About the role:
+Northwind Health Systems is seeking an executive technology leader to serve as
+Chief Information Officer. The CIO will own enterprise technology strategy,
+drive digital transformation across clinical and business operations, and lead a
+150+ person technology organization. This is a senior executive role reporting
+to the CEO and partnering with the board.
+
+Responsibilities:
+- Define and execute a multi-year enterprise IT and digital transformation strategy.
+- Lead adoption of AI and data analytics to improve clinical and operational outcomes.
+- Oversee cybersecurity, risk management, and regulatory compliance (HIPAA).
+- Manage a technology budget exceeding $80M and a large cross-functional team.
+- Modernize legacy systems and migrate core workloads to the cloud (Azure/AWS).
+- Partner with executive leadership on governance, KPIs, and board reporting.
+- Build and mentor high-performing engineering, data, and security teams.
+
+Required qualifications:
+- 15+ years of progressive IT leadership, including 5+ years as a CIO, CTO, or VP.
+- Proven experience leading enterprise digital transformation at scale.
+- Strong background in cloud migration, cybersecurity, and data/AI strategy.
+- Experience managing large budgets and vendor/partner relationships.
+- Excellent executive communication and board-level presentation skills.
+
+Preferred qualifications:
+- Healthcare or regulated-industry experience.
+- Familiarity with Agile delivery, ITIL, and enterprise architecture (TOGAF).
+- MBA or equivalent business leadership credential.
+
+Keywords: digital transformation, AI, cloud migration, cybersecurity, HIPAA,
+enterprise architecture, IT strategy, executive leadership, data analytics,
+budget management, governance, Azure, AWS.
