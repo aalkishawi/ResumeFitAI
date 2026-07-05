@@ -154,6 +154,22 @@ function normalizeUnsupported(raw: unknown): UnsupportedClaim[] {
   }).filter((u) => u.claim.trim().length > 0);
 }
 
+// ---------------------------------------------------------------------------
+// Output correctness is enforced by (a) the system prompts, which demand a
+// single JSON object of an exact shape, and (b) the resilient parser in
+// client.ts (extractJson + escapeControlCharsInStrings), which repairs the
+// common failure — literal newlines/control chars inside the markdown resume
+// string — before parsing.
+//
+// We deliberately do NOT use the API's Structured Outputs (json_schema) here.
+// The full analysis/tailoring shapes have too many free-form string fields;
+// each expands into the JSON-string sub-grammar and the compiled
+// constrained-decoding grammar exceeds the API's size limit, returning
+// 400 "The compiled grammar is too large". Prompt + repair covers the same
+// ground without that ceiling. The normalizers above still clamp/validate
+// every field, so a stray extra key or wrong type can't reach the frontend.
+// ---------------------------------------------------------------------------
+
 export interface PipelineInput {
   resume: string;
   jobDescription: string;
@@ -171,7 +187,7 @@ export async function runPipeline(input: PipelineInput): Promise<AnalysisResult>
     await callJson({
       system: ANALYZE_SYSTEM_PROMPT,
       user: buildAnalyzeUserPrompt({ resume, jobDescription, instruction }),
-      maxTokens: 4096,
+      maxTokens: 8000,
       temperature: 0.3,
     })
   );
@@ -194,7 +210,7 @@ export async function runPipeline(input: PipelineInput): Promise<AnalysisResult>
     await callJson({
       system: TAILOR_SYSTEM_PROMPT,
       user: buildTailorUserPrompt({ resume, jobDescription, instruction, analysisJson }),
-      maxTokens: 12000,
+      maxTokens: 32000,
       temperature: 0.45,
     })
   );

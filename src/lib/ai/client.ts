@@ -88,8 +88,67 @@ function textFromMessage(message: Anthropic.Message): string {
 }
 
 /**
+ * Escape raw control characters (newlines, tabs, etc.) that appear *inside*
+ * JSON string literals. Models frequently emit multi-line string values — like
+ * a tailored resume — with literal newlines, which is invalid JSON and the most
+ * common cause of a mid-string parse failure. This walks the text tracking
+ * whether we're inside a string and escapes control chars only there, leaving
+ * structural whitespace between tokens untouched.
+ */
+function escapeControlCharsInStrings(json: string): string {
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < json.length; i++) {
+    const ch = json[i];
+    if (escaped) {
+      out += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      out += ch;
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      out += ch;
+      continue;
+    }
+    if (inString && ch.charCodeAt(0) < 0x20) {
+      // Control character inside a string — escape it to valid JSON.
+      if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else if (ch === "\b") out += "\\b";
+      else if (ch === "\f") out += "\\f";
+      else out += "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0");
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** Try to parse, first as-is then after repairing in-string control chars. */
+function tryParse(s: string): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(s) };
+  } catch {
+    /* fall through to repair */
+  }
+  try {
+    return { ok: true, value: JSON.parse(escapeControlCharsInStrings(s)) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/**
  * Extract a JSON object from a model response that *should* be pure JSON but may
- * occasionally be wrapped in prose or code fences.
+ * occasionally be wrapped in prose/code fences or contain unescaped control
+ * characters inside string values.
  */
 function extractJson(raw: string): unknown {
   const trimmed = raw.trim();
@@ -98,17 +157,18 @@ function extractJson(raw: string): unknown {
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const candidate = fenceMatch ? fenceMatch[1].trim() : trimmed;
 
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    // Fall back to the substring between the first { and the last }.
-    const first = candidate.indexOf("{");
-    const last = candidate.lastIndexOf("}");
-    if (first !== -1 && last !== -1 && last > first) {
-      return JSON.parse(candidate.slice(first, last + 1));
-    }
-    throw new Error("The AI response was not valid JSON.");
+  const direct = tryParse(candidate);
+  if (direct.ok) return direct.value;
+
+  // Fall back to the substring between the first { and the last }.
+  const first = candidate.indexOf("{");
+  const last = candidate.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    const sliced = tryParse(candidate.slice(first, last + 1));
+    if (sliced.ok) return sliced.value;
   }
+
+  throw new Error("The AI response was not valid JSON.");
 }
 
 /**
@@ -118,16 +178,41 @@ export async function callJson<T = unknown>(params: {
   system: string;
   user: string;
   maxTokens?: number;
+  /**
+   * JSON Schema for the expected response. When provided, the API is constrained
+   * to emit output matching this schema (Structured Outputs). This GUARANTEES
+   * syntactically valid JSON via constrained decoding — the model cannot produce
+   * malformed JSON, which eliminates parse failures from unescaped quotes or
+   * newlines in string values (e.g. a markdown resume).
+   */
+  schema?: Record<string, unknown>;
+  /**
+   * Deprecated/ignored. Newer models (e.g. claude-sonnet-5) reject the
+   * `temperature` parameter, so it is no longer forwarded to the API. Kept in
+   * the signature so existing callers don't need to change.
+   */
   temperature?: number;
 }): Promise<T> {
   const client = getClient();
-  const message = await client.messages.create({
+  // Stream the response. Large max_tokens values (needed so the tailoring JSON
+  // isn't truncated mid-object) can exceed the SDK's non-streaming HTTP timeout,
+  // so we always stream and collect the final message.
+  const stream = client.messages.stream({
     model: DEFAULT_MODEL,
-    max_tokens: params.maxTokens ?? 4096,
-    temperature: params.temperature ?? 0.4,
+    max_tokens: params.maxTokens ?? 8192,
+    // Disable extended thinking. On claude-sonnet-5 adaptive thinking is ON by
+    // default (when `thinking` is omitted), and thinking tokens count against
+    // max_tokens — they were eating the budget and truncating the JSON output.
+    // This is structured extraction, so we don't need thinking; give the whole
+    // budget to the response.
+    thinking: { type: "disabled" },
+    ...(params.schema
+      ? { output_config: { format: { type: "json_schema" as const, schema: params.schema } } }
+      : {}),
     system: params.system,
     messages: [{ role: "user", content: params.user }],
   });
+  const message = await stream.finalMessage();
 
   // A truncated response (hit max_tokens) yields incomplete JSON. Detect it
   // explicitly so the user gets an actionable message instead of a generic
