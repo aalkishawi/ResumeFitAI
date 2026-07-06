@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeRequestSchema } from "@/lib/schemas";
 import { runPipeline } from "@/lib/ai/pipeline";
 import { MissingApiKeyError, describeApiError } from "@/lib/ai/client";
+import { getUserContext } from "@/lib/auth/session";
+import { assertCanRun, chargeForRun, RunNotAllowedError } from "@/lib/billing/usage";
+import { cacheKey } from "@/lib/ai/cache";
 
 // AI + document parsing require the Node runtime (not Edge).
 export const runtime = "nodejs";
@@ -26,14 +29,50 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // --- Auth + entitlement gate ---------------------------------------------
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json(
+      { error: "Please sign in to tailor your resume.", code: "auth_required" },
+      { status: 401 }
+    );
+  }
+
+  const { resume, jobDescription, instruction, mode } = parsed.data;
+
   try {
-    const result = await runPipeline({
-      resume: parsed.data.resume,
-      jobDescription: parsed.data.jobDescription,
-      instruction: parsed.data.instruction,
-      mode: parsed.data.mode,
+    assertCanRun(ctx, mode);
+  } catch (err) {
+    if (err instanceof RunNotAllowedError) {
+      return NextResponse.json({ error: err.message, code: err.code }, { status: 402 });
+    }
+    throw err;
+  }
+
+  // --- Run the pipeline ----------------------------------------------------
+  try {
+    const result = await runPipeline({ resume, jobDescription, instruction, mode });
+
+    // Charge + persist only for fresh runs (cache hits are free to the user).
+    let credits = ctx.credits;
+    if (result.usage && !result.usage.cached) {
+      credits = await chargeForRun({
+        userId: ctx.user.id,
+        plan: ctx.plan,
+        mode,
+        usage: result.usage,
+        inputHash: cacheKey({ resume, jobDescription, instruction, mode }),
+      });
+    }
+
+    return NextResponse.json({
+      result,
+      account: {
+        credits,
+        plan: ctx.planKey,
+        unlimited: ctx.plan.monthlyScans === -1,
+      },
     });
-    return NextResponse.json({ result });
   } catch (err) {
     if (err instanceof MissingApiKeyError) {
       return NextResponse.json({ error: err.message }, { status: 500 });

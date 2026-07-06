@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Briefcase,
   FileText,
@@ -41,6 +42,15 @@ const MODE_OPTIONS: {
   { id: "local", label: "Local", hint: "Runs on your own Ollama / vLLM server" },
 ];
 
+interface Account {
+  authenticated: boolean;
+  plan?: string;
+  planName?: string;
+  credits?: number;
+  unlimited?: boolean;
+  features?: string[];
+}
+
 export default function HomePage() {
   const [resume, setResume] = useState("");
   const [jd, setJd] = useState("");
@@ -50,7 +60,19 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorCta, setErrorCta] = useState<{ label: string; href: string } | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  const [account, setAccount] = useState<Account | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((d: Account) => setAccount(d))
+      .catch(() => setAccount({ authenticated: false }));
+  }, []);
+
+  const canUsePremium = Boolean(account?.features?.includes("premium_model"));
 
   const resultsRef = useRef<HTMLDivElement>(null);
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -85,7 +107,13 @@ export default function HomePage() {
   };
 
   const analyze = async () => {
+    // Not signed in — send them to sign in rather than firing a doomed request.
+    if (account && !account.authenticated) {
+      window.location.href = "/signin?callbackUrl=/";
+      return;
+    }
     setError(null);
+    setErrorCta(null);
     setResult(null);
     setLoading(true);
     startStepAnimation();
@@ -96,8 +124,19 @@ export default function HomePage() {
         body: JSON.stringify({ resume, jobDescription: jd, instruction, mode }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      if (!res.ok) {
+        setError(data.error || "Something went wrong.");
+        if (data.code === "auth_required") {
+          setErrorCta({ label: "Sign in", href: "/signin?callbackUrl=/" });
+        } else if (data.code === "insufficient_credits" || data.code === "premium_required") {
+          setErrorCta({ label: "View plans", href: "/pricing" });
+        }
+        return;
+      }
       setResult(data.result as AnalysisResult);
+      if (data.account) {
+        setAccount((prev) => (prev ? { ...prev, ...data.account, authenticated: true } : prev));
+      }
       setTimeout(
         () => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
         100
@@ -204,33 +243,61 @@ export default function HomePage() {
       <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-800">Tailoring mode</h2>
-          <span className="text-xs text-slate-400">
-            Choose your cost / quality balance
-          </span>
+          {account?.authenticated ? (
+            <span className="text-xs text-slate-500">
+              {account.unlimited ? (
+                <span className="font-medium text-emerald-600">Unlimited</span>
+              ) : (
+                <>
+                  <span className="font-medium text-slate-700">{account.credits}</span> credit
+                  {account.credits === 1 ? "" : "s"} left
+                </>
+              )}
+              {" · "}
+              {account.planName} plan
+            </span>
+          ) : (
+            <span className="text-xs text-slate-400">Choose your cost / quality balance</span>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {MODE_OPTIONS.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className={cx(
-                "rounded-xl border p-3 text-left transition",
-                mode === m.id
-                  ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100"
-                  : "border-slate-200 bg-white hover:border-slate-300"
-              )}
-            >
-              <div
+          {MODE_OPTIONS.map((m) => {
+            const locked = m.id === "premium" && account?.authenticated && !canUsePremium;
+            const active = mode === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => {
+                  if (locked) {
+                    setError("Premium mode uses our strongest model and requires the Premium plan.");
+                    setErrorCta({ label: "View plans", href: "/pricing" });
+                    return;
+                  }
+                  setMode(m.id);
+                }}
                 className={cx(
-                  "text-sm font-semibold",
-                  mode === m.id ? "text-brand-700" : "text-slate-700"
+                  "relative rounded-xl border p-3 text-left transition",
+                  active
+                    ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100"
+                    : "border-slate-200 bg-white hover:border-slate-300",
+                  locked && "opacity-70"
                 )}
               >
-                {m.label}
-              </div>
-              <div className="mt-0.5 text-xs text-slate-400">{m.hint}</div>
-            </button>
-          ))}
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cx(
+                      "text-sm font-semibold",
+                      active ? "text-brand-700" : "text-slate-700"
+                    )}
+                  >
+                    {m.label}
+                  </span>
+                  {locked ? <Lock size={12} className="text-slate-400" /> : null}
+                </div>
+                <div className="mt-0.5 text-xs text-slate-400">{m.hint}</div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -247,7 +314,11 @@ export default function HomePage() {
           )}
         >
           {loading ? <Spinner className="h-4 w-4" /> : <Wand2 size={16} />}
-          {loading ? "Tailoring your resume…" : "Analyze & Tailor Resume"}
+          {loading
+            ? "Tailoring your resume…"
+            : account && !account.authenticated
+            ? "Sign in to tailor"
+            : "Analyze & Tailor Resume"}
         </button>
         {!canSubmit && !loading ? (
           <p className="text-xs text-slate-400">
@@ -256,10 +327,10 @@ export default function HomePage() {
         ) : null}
 
         {/* Privacy note */}
-        <p className="flex items-center gap-1.5 text-xs text-slate-400">
+        <p className="flex items-center gap-1.5 text-center text-xs text-slate-400">
           <Lock size={12} />
-          Your data is processed in-session and is <strong>not stored</strong>. Resumes can
-          contain sensitive personal information — only share what you&apos;re comfortable with.
+          We don&apos;t store your resume or job-description text — only anonymous run
+          stats (tokens &amp; cost) for your account history. Review generated resumes before use.
         </p>
       </div>
 
@@ -307,6 +378,14 @@ export default function HomePage() {
         <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
           <strong>Couldn&apos;t complete tailoring.</strong>
           <p className="mt-1">{error}</p>
+          {errorCta ? (
+            <Link
+              href={errorCta.href}
+              className="mt-3 inline-block rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+            >
+              {errorCta.label}
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
