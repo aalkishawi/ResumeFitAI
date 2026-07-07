@@ -25,7 +25,7 @@ export function TailoredResumeTab({ result }: { result: AnalysisResult }) {
     <div className="space-y-5">
       {/* Truthfulness guardrail status */}
       {claims.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
           <ShieldCheck size={18} className="shrink-0" />
           <span>
             <strong>Truthfulness check passed.</strong> Every claim in this resume is
@@ -61,8 +61,8 @@ export function TailoredResumeTab({ result }: { result: AnalysisResult }) {
         </Card>
       )}
 
-      {/* The tailored resume */}
-      <Card className="p-0">
+      {/* The tailored resume — always a white "paper" card, readable in both themes */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-white/10">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
           <h3 className="text-sm font-semibold text-slate-700">Tailored Resume</h3>
           <button
@@ -78,7 +78,7 @@ export function TailoredResumeTab({ result }: { result: AnalysisResult }) {
             {result.tailoredResume || "_No resume was generated._"}
           </ReactMarkdown>
         </div>
-      </Card>
+      </div>
 
       <p className="text-center text-xs text-slate-400">
         Head to the <strong>Export</strong> tab to download this as DOCX, PDF, TXT, or Markdown.

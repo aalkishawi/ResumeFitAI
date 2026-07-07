@@ -160,10 +160,10 @@ export function CareerTools({
   };
 
   return (
-    <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+    <section className="mt-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 shadow-card dark:shadow-none">
       <div className="mb-1 flex items-center gap-2">
         <Sparkles size={18} className="text-brand-600" />
-        <h3 className="text-sm font-semibold text-slate-800">Career tools</h3>
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Career tools</h3>
         {me?.authenticated && !me.unlimited ? (
           <span className="ml-auto text-xs text-slate-400">{me.credits} credits left</span>
         ) : null}
@@ -189,8 +189,8 @@ export function CareerTools({
           const locked = Boolean(me?.authenticated && !me.features?.includes(tool.feature));
           const err = errors[tool.id];
           return (
-            <div key={tool.id} className="rounded-xl border border-slate-200 p-4">
-              <div className="flex items-center gap-2 text-slate-700">
+            <div key={tool.id} className="rounded-xl border border-slate-200 dark:border-white/10 p-4">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
                 <span className="text-brand-600">{tool.icon}</span>
                 <span className="text-sm font-semibold">{tool.title}</span>
                 {locked ? <Lock size={12} className="text-slate-400" /> : null}
@@ -202,7 +202,7 @@ export function CareerTools({
                   href="/pricing"
                   target="_blank"
                   rel="noopener"
-                  className="mt-3 inline-block rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  className="mt-3 inline-block rounded-lg border border-slate-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-white/5"
                 >
                   Upgrade to unlock
                 </Link>
@@ -239,15 +239,15 @@ export function CareerTools({
       {coverLetter ? (
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-slate-800">Your cover letter</h4>
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Your cover letter</h4>
             <button
               onClick={() => navigator.clipboard.writeText(coverLetter)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 dark:border-white/10 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:bg-white/5"
             >
               Copy
             </button>
           </div>
-          <div className="prose prose-sm max-w-none rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-700">
+          <div className="prose prose-sm dark:prose-invert max-w-none rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 text-slate-700 dark:text-slate-200">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{coverLetter}</ReactMarkdown>
           </div>
         </div>
@@ -255,9 +255,9 @@ export function CareerTools({
 
       {interview ? (
         <div className="mt-5 space-y-4">
-          <h4 className="text-sm font-semibold text-slate-800">Interview prep</h4>
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Interview prep</h4>
           {interview.whyThisRole ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-sm text-slate-700 dark:text-slate-200">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Why this role
               </div>
@@ -265,22 +265,22 @@ export function CareerTools({
             </div>
           ) : null}
           {interview.questions.map((q, i) => (
-            <div key={i} className="rounded-xl border border-slate-200 p-3">
+            <div key={i} className="rounded-xl border border-slate-200 dark:border-white/10 p-3">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-slate-800">{q.question}</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{q.question}</p>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase text-slate-500">
                   {q.category}
                 </span>
               </div>
-              <p className="mt-2 whitespace-pre-line text-sm text-slate-600">{q.starAnswer}</p>
+              <p className="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">{q.starAnswer}</p>
             </div>
           ))}
           {interview.salaryTalkingPoints.length ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Salary negotiation points
               </div>
-              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600">
+              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-300">
                 {interview.salaryTalkingPoints.map((s, i) => (
                   <li key={i}>{s}</li>
                 ))}
@@ -292,14 +292,14 @@ export function CareerTools({
 
       {linkedin ? (
         <div className="mt-5 space-y-3">
-          <h4 className="text-sm font-semibold text-slate-800">LinkedIn optimization</h4>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">LinkedIn optimization</h4>
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Headline</div>
-            <p className="mt-1 text-sm text-slate-700">{linkedin.headline}</p>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{linkedin.headline}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">About</div>
-            <div className="prose prose-sm mt-1 max-w-none text-slate-700">
+            <div className="prose prose-sm dark:prose-invert mt-1 max-w-none text-slate-700 dark:text-slate-200">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{linkedin.about}</ReactMarkdown>
             </div>
           </div>
@@ -307,11 +307,11 @@ export function CareerTools({
             <ListCard title="Suggested experience bullets" items={linkedin.experienceBullets} />
           ) : null}
           {linkedin.skills.length ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Skills</div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {linkedin.skills.map((s, i) => (
-                  <span key={i} className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
+                  <span key={i} className="rounded-full bg-white dark:bg-white/5 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-white/10">
                     {s}
                   </span>
                 ))}
@@ -324,7 +324,7 @@ export function CareerTools({
       {recruiter ? (
         <div className="mt-5 space-y-3">
           <div className="flex items-center gap-3">
-            <h4 className="text-sm font-semibold text-slate-800">Recruiter review</h4>
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Recruiter review</h4>
             <span
               className={cx(
                 "rounded-full px-2.5 py-0.5 text-xs font-bold",
@@ -339,7 +339,7 @@ export function CareerTools({
             </span>
           </div>
           {recruiter.verdict ? (
-            <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <p className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 text-sm text-slate-700 dark:text-slate-200">
               {recruiter.verdict}
             </p>
           ) : null}
@@ -353,7 +353,7 @@ export function CareerTools({
       {ats ? (
         <div className="mt-5 space-y-3">
           <div className="flex items-center gap-3">
-            <h4 className="text-sm font-semibold text-slate-800">ATS check</h4>
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">ATS check</h4>
             <span
               className={cx(
                 "rounded-full px-2.5 py-0.5 text-xs font-bold",
@@ -370,7 +370,7 @@ export function CareerTools({
           {ats.issues.length ? (
             <div className="space-y-2">
               {ats.issues.map((issue, i) => (
-                <div key={i} className="rounded-xl border border-slate-200 p-3">
+                <div key={i} className="rounded-xl border border-slate-200 dark:border-white/10 p-3">
                   <div className="flex items-center gap-2">
                     <span
                       className={cx(
@@ -384,9 +384,9 @@ export function CareerTools({
                     >
                       {issue.severity}
                     </span>
-                    <span className="text-sm font-semibold text-slate-800">{issue.label}</span>
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{issue.label}</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{issue.detail}</p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{issue.detail}</p>
                 </div>
               ))}
             </div>
@@ -408,9 +408,9 @@ function ListCard({
   tone?: "ok" | "bad";
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</div>
-      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600">
+      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-300">
         {items.map((it, i) => (
           <li
             key={i}

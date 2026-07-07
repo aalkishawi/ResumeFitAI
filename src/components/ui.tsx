@@ -18,7 +18,7 @@ export function Card({
   return (
     <div
       className={cx(
-        "rounded-2xl border border-slate-200 bg-white shadow-card",
+        "rounded-2xl border border-slate-200 bg-white shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none",
         className
       )}
     >
@@ -36,7 +36,7 @@ export function SectionTitle({
 }) {
   return (
     <div className="mb-3">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
         {children}
       </h3>
       {hint ? <p className="mt-0.5 text-xs text-slate-400">{hint}</p> : null}
@@ -47,11 +47,15 @@ export function SectionTitle({
 type Tone = "brand" | "green" | "amber" | "red" | "slate";
 
 const TONE_CLASSES: Record<Tone, string> = {
-  brand: "bg-brand-50 text-brand-700 border-brand-200",
-  green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  amber: "bg-amber-50 text-amber-700 border-amber-200",
-  red: "bg-rose-50 text-rose-700 border-rose-200",
-  slate: "bg-slate-100 text-slate-600 border-slate-200",
+  brand:
+    "bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-500/15 dark:text-brand-300 dark:border-brand-500/30",
+  green:
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
+  amber:
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
+  red: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30",
+  slate:
+    "bg-slate-100 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-300 dark:border-white/10",
 };
 
 export function Badge({
@@ -104,7 +108,7 @@ export function Spinner({ className }: { className?: string }) {
 export function ProgressBar({ value }: { value: number }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
       <div
         className="h-full rounded-full bg-brand-500 transition-all duration-300"
         style={{ width: `${pct}%` }}
@@ -169,7 +173,7 @@ export function ScoreDonut({
         </div>
       </div>
       {label ? (
-        <span className="mt-2 text-sm font-medium text-slate-600">{label}</span>
+        <span className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">{label}</span>
       ) : null}
     </div>
   );
@@ -181,12 +185,12 @@ export function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-sm">
-        <span className="text-slate-600">{label}</span>
+        <span className="text-slate-600 dark:text-slate-300">{label}</span>
         <span className="font-semibold" style={{ color }}>
           {value}
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${Math.max(0, Math.min(100, value))}%`, backgroundColor: color }}

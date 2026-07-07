@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Wand2 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteHeader() {
   const { data: session, status } = useSession();
@@ -21,6 +22,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-1 text-sm">
+          <ThemeToggle />
           <Link
             href="/pricing"
             className="hidden rounded-lg px-3 py-1.5 text-slate-300 hover:bg-white/10 hover:text-white sm:inline"

@@ -15,11 +15,11 @@ export default async function AccountPage() {
       <PageHeader title="Your account" subtitle={ctx.user.email ?? undefined} />
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Current plan
           </div>
-          <div className="mt-1 text-lg font-semibold text-slate-900">{ctx.plan.name}</div>
+          <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{ctx.plan.name}</div>
           <div className="mt-1 text-sm text-slate-500">{ctx.plan.tagline}</div>
           <Link
             href="/billing"
@@ -29,11 +29,11 @@ export default async function AccountPage() {
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Credits
           </div>
-          <div className="mt-1 text-3xl font-bold text-slate-900">{ctx.credits}</div>
+          <div className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{ctx.credits}</div>
           <div className="mt-1 text-sm text-slate-500">
             {ctx.plan.monthlyScans === -1
               ? "Unlimited scans on your plan"
@@ -42,7 +42,7 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-card">
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:shadow-none">
         Usage history and billing will appear here once billing is enabled.
       </div>
       </main>

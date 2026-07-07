@@ -44,7 +44,7 @@ export function ResultsView({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-1 mb-5 overflow-x-auto scroll-tidy bg-slate-50/80 px-1 py-2 backdrop-blur">
+      <div className="sticky top-0 z-10 -mx-1 mb-5 overflow-x-auto scroll-tidy bg-slate-50/80 px-1 py-2 backdrop-blur dark:bg-slate-950/50">
         <div className="flex gap-1.5">
           {TABS.map((t) => (
             <button
@@ -54,7 +54,7 @@ export function ResultsView({
                 "inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium transition",
                 tab === t.key
                   ? "bg-brand-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
               )}
             >
               {t.icon}

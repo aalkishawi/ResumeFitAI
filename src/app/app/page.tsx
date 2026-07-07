@@ -213,12 +213,12 @@ export default function AppPage() {
       </section>
 
       {/* Instruction / chat input */}
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-brand-600">
             <MessageSquareText size={18} />
           </span>
-          <h2 className="text-sm font-semibold text-slate-800">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             How should we tailor it? <span className="font-normal text-slate-400">(optional)</span>
           </h2>
         </div>
@@ -226,7 +226,7 @@ export default function AppPage() {
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
           placeholder='e.g. "Tailor this for a CIO role, make it more executive, emphasize AI & digital transformation, keep it to two pages, and export as a Word document."'
-          className="min-h-[72px] w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+          className="min-h-[72px] w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-brand-400 dark:focus:ring-brand-500/30"
         />
         <div className="mt-2 flex flex-wrap gap-1.5">
           {[
@@ -241,7 +241,7 @@ export default function AppPage() {
               onClick={() =>
                 setInstruction((prev) => (prev ? `${prev.trim()} ${chip}.` : `${chip}.`))
               }
-              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
+              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
             >
               + {chip}
             </button>
@@ -250,9 +250,9 @@ export default function AppPage() {
       </section>
 
       {/* Mode selector */}
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-800">Tailoring mode</h2>
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Tailoring mode</h2>
           {account?.authenticated ? (
             <span className="text-xs text-slate-500">
               {account.unlimited ? (
@@ -292,8 +292,8 @@ export default function AppPage() {
                 className={cx(
                   "relative rounded-xl border p-3 text-left transition",
                   active
-                    ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100"
-                    : "border-slate-200 bg-white hover:border-slate-300",
+                    ? "border-brand-400 bg-brand-50 ring-2 ring-brand-100 dark:border-brand-500/50 dark:bg-brand-500/10 dark:ring-brand-500/20"
+                    : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20",
                   locked && "opacity-70"
                 )}
               >
@@ -301,7 +301,7 @@ export default function AppPage() {
                   <span
                     className={cx(
                       "text-sm font-semibold",
-                      active ? "text-brand-700" : "text-slate-700"
+                      active ? "text-brand-700 dark:text-brand-300" : "text-slate-700 dark:text-slate-200"
                     )}
                   >
                     {m.label}
@@ -350,10 +350,10 @@ export default function AppPage() {
 
       {/* Loading state */}
       {loading ? (
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
           <div className="flex items-center gap-3">
-            <Spinner className="h-5 w-5 text-brand-600" />
-            <span className="text-sm font-medium text-slate-700">
+            <Spinner className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
               {LOADING_STEPS[stepIndex]}
             </span>
           </div>
@@ -409,7 +409,7 @@ export default function AppPage() {
       {result && !loading ? (
         <section ref={resultsRef} className="mt-10">
           {result.usage ? (
-            <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
+            <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
               <span className="font-medium text-slate-700">
                 {result.usage.mode.charAt(0).toUpperCase() + result.usage.mode.slice(1)} mode
               </span>

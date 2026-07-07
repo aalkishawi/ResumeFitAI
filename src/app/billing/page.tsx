@@ -49,9 +49,9 @@ export default async function BillingPage({
       {testUpgradeEnabled ? <TestingTools /> : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] p-5 shadow-card dark:shadow-none">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Plan</div>
-          <div className="mt-1 text-lg font-semibold text-slate-900">{ctx.plan.name}</div>
+          <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{ctx.plan.name}</div>
           <div className="mt-3 flex gap-2">
             <Link
               href="/pricing"
@@ -60,14 +60,14 @@ export default async function BillingPage({
               {ctx.planKey === "free" ? "Upgrade" : "Change plan"}
             </Link>
             {configured && hasCustomer ? (
-              <PortalButton className="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" />
+              <PortalButton className="rounded-lg border border-slate-200 dark:border-white/10 px-3.5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50" />
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+        <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] p-5 shadow-card dark:shadow-none">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Credits</div>
-          <div className="mt-1 text-3xl font-bold text-slate-900">
+          <div className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
             {ctx.plan.monthlyScans === -1 ? "∞" : ctx.credits}
           </div>
           <div className="mt-1 text-sm text-slate-500">
@@ -80,10 +80,10 @@ export default async function BillingPage({
       <p className="text-sm text-slate-500">One-time top-ups. 1 credit = 1 tailoring run (Premium mode = 3).</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {packs.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-card">
-            <div className="text-lg font-bold text-slate-900">{p.credits}</div>
+          <div key={p.id} className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] p-4 text-center shadow-card dark:shadow-none">
+            <div className="text-lg font-bold text-slate-900 dark:text-white">{p.credits}</div>
             <div className="text-xs text-slate-500">credits</div>
-            <div className="mt-1 text-sm font-medium text-slate-700">
+            <div className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">
               ${(p.priceCents / 100).toFixed(2)}
             </div>
             {configured ? (
@@ -112,7 +112,7 @@ export default async function BillingPage({
 function Banner({ tone, children }: { tone: "ok" | "muted"; children: React.ReactNode }) {
   const cls =
     tone === "ok"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-slate-200 bg-slate-50 text-slate-600";
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+      : "border-slate-200 dark:border-white/10 bg-slate-50 text-slate-600 dark:bg-white/5 dark:text-slate-300";
   return <div className={`mt-4 rounded-xl border px-4 py-3 text-sm ${cls}`}>{children}</div>;
 }

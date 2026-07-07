@@ -15,7 +15,7 @@ export function AnalysisTab({ result }: { result: AnalysisResult }) {
         <div className="grid items-center gap-6 md:grid-cols-[auto_1fr_auto]">
           <div className="flex items-center justify-center gap-6">
             <ScoreDonut score={scoreBefore.overall} label="Before" size={120} />
-            <ArrowRight className="text-slate-300" size={28} />
+            <ArrowRight className="text-slate-300 dark:text-slate-600" size={28} />
             <ScoreDonut score={scoreAfter.overall} label="After (est.)" size={120} />
           </div>
 
@@ -27,21 +27,21 @@ export function AnalysisTab({ result }: { result: AnalysisResult }) {
             <ScoreBar label="Seniority alignment" value={scoreAfter.seniorityAlignment} />
           </div>
 
-          <div className="flex flex-col items-center justify-center rounded-2xl bg-emerald-50 px-6 py-4 text-center">
-            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600">
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-emerald-50 px-6 py-4 text-center dark:bg-emerald-500/10">
+            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
               Projected lift
             </span>
-            <span className="text-3xl font-bold text-emerald-700">
+            <span className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">
               {delta >= 0 ? "+" : ""}
               {delta}
             </span>
-            <span className="mt-1 max-w-[150px] text-xs text-emerald-600">
+            <span className="mt-1 max-w-[150px] text-xs text-emerald-600 dark:text-emerald-400">
               from better presentation of your real experience
             </span>
           </div>
         </div>
 
-        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 dark:bg-white/5 dark:text-slate-300">
           {scoreAfter.explanation || scoreBefore.explanation}
         </p>
       </Card>
@@ -55,7 +55,7 @@ export function AnalysisTab({ result }: { result: AnalysisResult }) {
           <KeyValue label="Output format" value={instruction.outputFormat} />
         </div>
         {instruction.interpretation ? (
-          <p className="mt-4 flex gap-2 rounded-xl bg-brand-50 p-3 text-sm text-brand-800">
+          <p className="mt-4 flex gap-2 rounded-xl bg-brand-50 p-3 text-sm text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">
             <Sparkles size={16} className="mt-0.5 shrink-0" />
             {instruction.interpretation}
           </p>
@@ -90,7 +90,7 @@ export function AnalysisTab({ result }: { result: AnalysisResult }) {
               <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
                 Seniority
               </p>
-              <p className="text-sm text-slate-700">{jd.seniority}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-200">{jd.seniority}</p>
             </div>
             <div>
               <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
