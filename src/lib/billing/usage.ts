@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/client";
 import {
   CREDITS_PER_RUN,
   planHasFeature,
+  type FeatureKey,
   type PlanDef,
 } from "@/lib/config/plans";
 import type { RunUsageInfo } from "@/lib/types";
@@ -53,6 +54,51 @@ export function assertCanRun(ctx: BillingContext, mode: string): void {
       );
     }
   }
+}
+
+/** Throw if the user's plan doesn't include a feature (used by add-on tools). */
+export function assertFeature(ctx: BillingContext, feature: FeatureKey): void {
+  if (!planHasFeature(ctx.planKey, feature)) {
+    throw new RunNotAllowedError(
+      "feature_locked",
+      "Your plan doesn't include this feature. Upgrade to unlock it."
+    );
+  }
+}
+
+/** Throw if the user lacks enough credits (skips unlimited plans). */
+export function assertCredits(ctx: BillingContext, cost = 1): void {
+  if (!isUnlimited(ctx.plan) && ctx.credits < cost) {
+    throw new RunNotAllowedError(
+      "insufficient_credits",
+      `This needs ${cost} credit${cost > 1 ? "s" : ""}, but you have ${ctx.credits}. Top up or upgrade to continue.`
+    );
+  }
+}
+
+/** Deduct credits for an add-on tool (no ResumeRun). Returns remaining balance. */
+export async function spendCredits(
+  userId: string,
+  plan: PlanDef,
+  amount: number,
+  action: string
+): Promise<number> {
+  const cost = isUnlimited(plan) ? 0 : amount;
+  return prisma.$transaction(async (tx) => {
+    let remaining: number;
+    if (cost > 0) {
+      const bal = await tx.creditBalance.update({
+        where: { userId },
+        data: { credits: { decrement: cost } },
+      });
+      remaining = bal.credits;
+    } else {
+      const bal = await tx.creditBalance.findUnique({ where: { userId } });
+      remaining = bal?.credits ?? 0;
+    }
+    await tx.usageLog.create({ data: { userId, action, quantity: 1 } });
+    return remaining;
+  });
 }
 
 /**

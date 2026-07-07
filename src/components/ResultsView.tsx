@@ -17,6 +17,7 @@ import { KeywordGapsTab } from "./tabs/KeywordGapsTab";
 import { ChangesTab } from "./tabs/ChangesTab";
 import { InterviewTab } from "./tabs/InterviewTab";
 import { ExportTab } from "./tabs/ExportTab";
+import { CareerTools } from "./CareerTools";
 
 type TabKey = "analysis" | "resume" | "keywords" | "changes" | "interview" | "export";
 
@@ -29,7 +30,15 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "export", label: "Export", icon: <Download size={16} /> },
 ];
 
-export function ResultsView({ result }: { result: AnalysisResult }) {
+export function ResultsView({
+  result,
+  resume = "",
+  jobDescription = "",
+}: {
+  result: AnalysisResult;
+  resume?: string;
+  jobDescription?: string;
+}) {
   const [tab, setTab] = useState<TabKey>("analysis");
   const flagCount = result.unsupportedClaims.length;
 
@@ -68,6 +77,14 @@ export function ResultsView({ result }: { result: AnalysisResult }) {
         {tab === "interview" && <InterviewTab result={result} />}
         {tab === "export" && <ExportTab result={result} />}
       </div>
+
+      {resume && jobDescription ? (
+        <CareerTools
+          resume={resume}
+          jobDescription={jobDescription}
+          tailoredResume={result.tailoredResume}
+        />
+      ) : null}
     </div>
   );
 }

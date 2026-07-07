@@ -113,6 +113,18 @@ export interface RunUsageInfo {
   mode: string;
 }
 
+export interface InterviewQuestion {
+  question: string;
+  category: string;
+  starAnswer: string;
+}
+
+export interface InterviewCoachResult {
+  questions: InterviewQuestion[];
+  whyThisRole: string;
+  salaryTalkingPoints: string[];
+}
+
 /** Combined result returned by POST /api/analyze. */
 export interface AnalysisResult {
   instruction: InstructionAnalysis;

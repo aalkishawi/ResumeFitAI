@@ -415,7 +415,7 @@ export default function HomePage() {
               ) : null}
             </div>
           ) : null}
-          <ResultsView result={result} />
+          <ResultsView result={result} resume={resume} jobDescription={jd} />
         </section>
       ) : null}
 

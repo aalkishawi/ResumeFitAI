@@ -40,3 +40,14 @@ export const exportRequestSchema = z.object({
 });
 
 export type ExportRequest = z.infer<typeof exportRequestSchema>;
+
+// Shared request shape for the add-on "career tools" (cover letter, interview,
+// LinkedIn, recruiter review, ATS check).
+export const toolRequestSchema = z.object({
+  resume: z.string().trim().min(40, "Resume text is too short."),
+  jobDescription: z.string().trim().min(40, "Job description is too short."),
+  instruction: z.string().trim().max(2000).optional().default(""),
+  tailoredResume: z.string().trim().max(60000).optional().default(""),
+});
+
+export type ToolRequest = z.infer<typeof toolRequestSchema>;
