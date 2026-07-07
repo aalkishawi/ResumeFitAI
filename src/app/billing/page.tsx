@@ -6,6 +6,7 @@ import { creditPacks } from "@/lib/billing/catalog";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { PortalButton } from "@/components/billing/PortalButton";
 import { TestingTools } from "@/components/dev/TestingTools";
+import { PageHeader } from "@/components/PageHeader";
 import { testUpgradeEnabled } from "@/lib/config/flags";
 import { prisma } from "@/lib/db/client";
 
@@ -27,9 +28,9 @@ export default async function BillingPage({
   const packs = creditPacks();
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Billing &amp; credits</h1>
-
+    <>
+      <PageHeader title="Billing & credits" subtitle="Manage your plan and top up credits." />
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       {status === "success" ? (
         <Banner tone="ok">Subscription updated — thank you! It may take a few seconds to reflect.</Banner>
       ) : status === "credits" ? (
@@ -103,7 +104,8 @@ export default async function BillingPage({
           </div>
         ))}
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 

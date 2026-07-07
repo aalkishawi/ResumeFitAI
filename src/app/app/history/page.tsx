@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FileText } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { getSessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { DeleteRunButton } from "@/components/history/DeleteRunButton";
@@ -26,20 +27,16 @@ export default async function HistoryPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Your history</h1>
-          <p className="mt-1 text-sm text-slate-500">Every resume you&apos;ve tailored, saved to your account.</p>
-        </div>
+    <>
+      <PageHeader title="Your history" subtitle="Every resume you've tailored, saved to your account.">
         <Link
           href="/app"
-          className="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          className="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-500"
         >
           New tailoring
         </Link>
-      </div>
-
+      </PageHeader>
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       {runs.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
           <FileText size={28} className="mx-auto mb-3 text-slate-300" />
@@ -74,6 +71,7 @@ export default async function HistoryPage() {
           ))}
         </ul>
       )}
-    </main>
+      </main>
+    </>
   );
 }

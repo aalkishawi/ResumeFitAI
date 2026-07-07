@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { DocumentInput } from "@/components/DocumentInput";
 import { ResultsView } from "@/components/ResultsView";
+import { PageHeader } from "@/components/PageHeader";
 import { Spinner, cx } from "@/components/ui";
 import type { AnalysisResult } from "@/lib/types";
 import {
@@ -170,45 +171,27 @@ export default function AppPage() {
     }
   };
 
-  return (
-    <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6">
-      {/* Header */}
-      <header className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-            <Wand2 size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">
-              Tailor a resume
-            </h1>
-            <p className="text-sm text-slate-500">
-              Ethical, ATS-friendly resume tailoring — your real experience, at its best.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/app/history"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            <HistoryIcon size={15} /> History
-          </Link>
-          <button
-            onClick={loadSample}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            <Sparkles size={15} /> Load sample
-          </button>
-          <button
-            onClick={reset}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
-          >
-            Clear
-          </button>
-        </div>
-      </header>
+  const darkBtn =
+    "inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-white/10";
 
+  return (
+    <>
+      <PageHeader
+        title="Tailor a resume"
+        subtitle="Ethical, ATS-friendly resume tailoring — your real experience, at its best."
+      >
+        <Link href="/app/history" className={darkBtn}>
+          <HistoryIcon size={15} /> History
+        </Link>
+        <button onClick={loadSample} className={darkBtn}>
+          <Sparkles size={15} /> Load sample
+        </button>
+        <button onClick={reset} className={darkBtn}>
+          Clear
+        </button>
+      </PageHeader>
+
+      <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6">
       {/* Three-input layout */}
       <section className="grid gap-4 lg:grid-cols-2">
         <DocumentInput
@@ -451,6 +434,7 @@ export default function AppPage() {
           <ResultsView result={result} resume={resume} jobDescription={jd} />
         </section>
       ) : null}
-    </main>
+      </main>
+    </>
   );
 }

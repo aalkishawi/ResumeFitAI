@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { PageHeader } from "@/components/PageHeader";
 import { getUserContext } from "@/lib/auth/session";
 
 export const metadata = { title: "Account — ResumeFit AI" };
@@ -10,11 +11,10 @@ export default async function AccountPage() {
   if (!ctx) redirect("/signin?callbackUrl=/account");
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Your account</h1>
-      <p className="mt-1 text-sm text-slate-500">{ctx.user.email}</p>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+    <>
+      <PageHeader title="Your account" subtitle={ctx.user.email ?? undefined} />
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Current plan
@@ -45,6 +45,7 @@ export default async function AccountPage() {
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-card">
         Usage history and billing will appear here once billing is enabled.
       </div>
-    </main>
+      </main>
+    </>
   );
 }
