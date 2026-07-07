@@ -37,7 +37,7 @@ const STEPS = [
 const FAQS = [
   { q: "Does this fabricate experience to beat the ATS?", a: "No. ResumeFit only rephrases and reorganizes your real experience for clarity and job alignment. It flags any claim it can't support from your resume." },
   { q: "Is it really ATS-friendly?", a: "We improve ATS compatibility — clean structure, standard sections, keyword alignment — and flag formatting risks. No tool can guarantee passing every ATS." },
-  { q: "Do you store my resume?", a: "No. Your resume and job-description text are processed for the request and not stored — we keep only anonymous usage stats for your account." },
+  { q: "Do you store my resume?", a: "Your tailored resumes are saved to your account history so you can revisit them, and you can delete any run at any time. We never sell your data or use it to train models." },
   { q: "Which AI models do you use?", a: "A cost-routed mix: fast, affordable models for analysis and stronger models for tailoring. Premium unlocks our most capable model; Local mode can run on your own server." },
 ];
 

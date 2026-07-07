@@ -5,6 +5,8 @@ import { isStripeConfigured } from "@/lib/billing/stripe";
 import { creditPacks } from "@/lib/billing/catalog";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { PortalButton } from "@/components/billing/PortalButton";
+import { TestingTools } from "@/components/dev/TestingTools";
+import { testUpgradeEnabled } from "@/lib/config/flags";
 import { prisma } from "@/lib/db/client";
 
 export const metadata = { title: "Billing — ResumeFit AI" };
@@ -42,6 +44,8 @@ export default async function BillingPage({
           checkout.
         </Banner>
       ) : null}
+
+      {testUpgradeEnabled ? <TestingTools /> : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">

@@ -18,3 +18,13 @@ export const featureFlags = {
 };
 
 export type FeatureFlags = typeof featureFlags;
+
+/**
+ * Test-mode self-upgrade (no payment) for local/dev testing. On by default
+ * outside production; set ENABLE_TEST_UPGRADE=false to disable, or =true to
+ * allow it in production (not recommended).
+ */
+export const testUpgradeEnabled =
+  process.env.NODE_ENV !== "production"
+    ? process.env.ENABLE_TEST_UPGRADE !== "false"
+    : process.env.ENABLE_TEST_UPGRADE === "true";

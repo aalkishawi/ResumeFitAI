@@ -127,6 +127,14 @@ model ResumeRun {
   creditsUsed  Int      @default(0)
   createdAt    DateTime @default(now())
 
+  // Saved work (history). Present for signed-in users so runs can be reopened.
+  title          String?
+  scoreOverall   Int     @default(0)
+  resume         String?
+  jobDescription String?
+  instruction    String?
+  resultJson     String? // full AnalysisResult JSON
+
   user     User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   costLogs CostLog[]
   exports  ExportedDocument[]

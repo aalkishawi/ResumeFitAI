@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserContext } from "@/lib/auth/session";
+import { testUpgradeEnabled } from "@/lib/config/flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 // entitlements). Used to gate UI (premium mode, credit display, upgrade CTAs).
 export async function GET() {
   const ctx = await getUserContext();
-  if (!ctx) return NextResponse.json({ authenticated: false });
+  if (!ctx) return NextResponse.json({ authenticated: false, testMode: testUpgradeEnabled });
   return NextResponse.json({
     authenticated: true,
     email: ctx.user.email,
@@ -17,5 +18,6 @@ export async function GET() {
     credits: ctx.credits,
     unlimited: ctx.plan.monthlyScans === -1,
     features: ctx.plan.features,
+    testMode: testUpgradeEnabled,
   });
 }

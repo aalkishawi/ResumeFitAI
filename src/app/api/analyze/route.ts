@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   try {
     const result = await runPipeline({ resume, jobDescription, instruction, mode });
 
-    // Charge + persist only for fresh runs (cache hits are free to the user).
+    // Charge + persist (with saved work for history) only for fresh runs.
     let credits = ctx.credits;
     if (result.usage && !result.usage.cached) {
       credits = await chargeForRun({
@@ -62,6 +62,12 @@ export async function POST(req: NextRequest) {
         mode,
         usage: result.usage,
         inputHash: cacheKey({ resume, jobDescription, instruction, mode }),
+        title: result.jd.jobTitle || "Tailored resume",
+        scoreOverall: result.scoreAfter.overall,
+        resume,
+        jobDescription,
+        instruction,
+        resultJson: JSON.stringify(result),
       });
     }
 

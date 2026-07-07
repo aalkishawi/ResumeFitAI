@@ -26,6 +26,7 @@ interface Me {
   credits?: number;
   unlimited?: boolean;
   features?: string[];
+  testMode?: boolean;
 }
 
 type ToolId = "cover_letter" | "interview" | "linkedin" | "recruiter" | "ats";
@@ -100,12 +101,30 @@ export function CareerTools({
   const [recruiter, setRecruiter] = useState<RecruiterReview | null>(null);
   const [ats, setAts] = useState<AtsCheckResult | null>(null);
 
-  useEffect(() => {
+  const loadMe = () => {
     fetch("/api/me")
       .then((r) => r.json())
       .then(setMe)
       .catch(() => setMe({ authenticated: false }));
+  };
+
+  useEffect(() => {
+    loadMe();
+    // Re-check plan/credits when the tab regains focus (e.g. after upgrading in
+    // another tab), so unlocked features light up without a manual refresh.
+    const onFocus = () => loadMe();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
+
+  const unlockTest = async () => {
+    await fetch("/api/dev/upgrade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "premium" }),
+    }).catch(() => {});
+    loadMe();
+  };
 
   const run = async (tool: (typeof TOOLS)[number]) => {
     setBusy(tool.id);
@@ -153,6 +172,18 @@ export function CareerTools({
         Generate more from your resume &amp; this job — grounded in your real experience.
       </p>
 
+      {me?.testMode && me.authenticated ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <span>🧪 Test mode — unlock every feature (Premium, unlimited) without paying.</span>
+          <button
+            onClick={unlockTest}
+            className="rounded-lg bg-amber-500 px-2.5 py-1 font-semibold text-white hover:bg-amber-600"
+          >
+            Unlock all (test)
+          </button>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
         {TOOLS.map((tool) => {
           const locked = Boolean(me?.authenticated && !me.features?.includes(tool.feature));
@@ -169,6 +200,8 @@ export function CareerTools({
               {locked ? (
                 <Link
                   href="/pricing"
+                  target="_blank"
+                  rel="noopener"
                   className="mt-3 inline-block rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   Upgrade to unlock

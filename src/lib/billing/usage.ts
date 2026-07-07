@@ -111,6 +111,13 @@ export async function chargeForRun(params: {
   mode: string;
   usage: RunUsageInfo;
   inputHash: string;
+  /** Saved-work fields for history. */
+  title?: string;
+  scoreOverall?: number;
+  resume?: string;
+  jobDescription?: string;
+  instruction?: string;
+  resultJson?: string;
 }): Promise<number> {
   const cost = isUnlimited(params.plan) ? 0 : creditsForMode(params.mode);
 
@@ -139,6 +146,12 @@ export async function chargeForRun(params: {
         outputTokens: params.usage.outputTokens,
         cached: params.usage.cached,
         creditsUsed: cost,
+        title: params.title,
+        scoreOverall: params.scoreOverall ?? 0,
+        resume: params.resume,
+        jobDescription: params.jobDescription,
+        instruction: params.instruction,
+        resultJson: params.resultJson,
       },
     });
 

@@ -9,6 +9,7 @@ import {
   MessageSquareText,
   Sparkles,
   Wand2,
+  History as HistoryIcon,
 } from "lucide-react";
 import { DocumentInput } from "@/components/DocumentInput";
 import { ResultsView } from "@/components/ResultsView";
@@ -49,6 +50,7 @@ interface Account {
   credits?: number;
   unlimited?: boolean;
   features?: string[];
+  testMode?: boolean;
 }
 
 export default function AppPage() {
@@ -65,12 +67,31 @@ export default function AppPage() {
 
   const [account, setAccount] = useState<Account | null>(null);
 
-  useEffect(() => {
+  const loadMe = () => {
     fetch("/api/me")
       .then((r) => r.json())
       .then((d: Account) => setAccount(d))
       .catch(() => setAccount({ authenticated: false }));
+  };
+
+  useEffect(() => {
+    loadMe();
+    const onFocus = () => loadMe();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
+
+  const unlockTest = async () => {
+    await fetch("/api/dev/upgrade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: "premium" }),
+    }).catch(() => {});
+    loadMe();
+    setMode("premium");
+    setError(null);
+    setErrorCta(null);
+  };
 
   const canUsePremium = Boolean(account?.features?.includes("premium_model"));
 
@@ -167,11 +188,17 @@ export default function AppPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/app/history"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            <HistoryIcon size={15} /> History
+          </Link>
           <button
             onClick={loadSample}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
           >
-            <Sparkles size={15} /> Load sample data
+            <Sparkles size={15} /> Load sample
           </button>
           <button
             onClick={reset}
@@ -269,6 +296,10 @@ export default function AppPage() {
                 key={m.id}
                 onClick={() => {
                   if (locked) {
+                    if (account?.testMode) {
+                      void unlockTest();
+                      return;
+                    }
                     setError("Premium mode uses our strongest model and requires the Premium plan.");
                     setErrorCta({ label: "View plans", href: "/pricing" });
                     return;
@@ -329,8 +360,8 @@ export default function AppPage() {
         {/* Privacy note */}
         <p className="flex items-center gap-1.5 text-center text-xs text-slate-400">
           <Lock size={12} />
-          We don&apos;t store your resume or job-description text — only anonymous run
-          stats (tokens &amp; cost) for your account history. Review generated resumes before use.
+          Your tailored resumes are saved to your <Link href="/app/history" className="underline">history</Link> so you
+          can revisit them — delete any run anytime. Always review generated resumes before use.
         </p>
       </div>
 
@@ -381,6 +412,8 @@ export default function AppPage() {
           {errorCta ? (
             <Link
               href={errorCta.href}
+              target={errorCta.href.startsWith("/pricing") ? "_blank" : undefined}
+              rel={errorCta.href.startsWith("/pricing") ? "noopener" : undefined}
               className="mt-3 inline-block rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700"
             >
               {errorCta.label}
