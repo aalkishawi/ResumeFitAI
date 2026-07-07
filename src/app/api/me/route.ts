@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserContext } from "@/lib/auth/session";
+import { isCurrentUserAdmin } from "@/lib/auth/admin";
 import { testUpgradeEnabled } from "@/lib/config/flags";
 
 export const runtime = "nodejs";
@@ -19,5 +20,6 @@ export async function GET() {
     unlimited: ctx.plan.monthlyScans === -1,
     features: ctx.plan.features,
     testMode: testUpgradeEnabled,
+    isAdmin: await isCurrentUserAdmin(),
   });
 }

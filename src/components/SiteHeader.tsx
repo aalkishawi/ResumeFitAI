@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Wand2 } from "lucide-react";
@@ -8,6 +9,15 @@ import { ThemeToggle } from "./ThemeToggle";
 export function SiteHeader() {
   const { data: session, status } = useSession();
   const user = session?.user;
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((d) => setIsAdmin(Boolean(d.isAdmin)))
+      .catch(() => {});
+  }, [status]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
@@ -43,6 +53,14 @@ export function SiteHeader() {
               >
                 Billing
               </Link>
+              {isAdmin ? (
+                <Link
+                  href="/admin"
+                  className="rounded-lg px-3 py-1.5 font-medium text-slate-200 hover:bg-white/10 hover:text-white"
+                >
+                  Admin
+                </Link>
+              ) : null}
               <Link
                 href="/account"
                 className="hidden rounded-lg px-3 py-1.5 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:inline"
