@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { PrivacyControls } from "@/components/account/PrivacyControls";
 import { getUserContext } from "@/lib/auth/session";
 
 export const metadata = { title: "Account — ResumeFit AI" };
@@ -42,8 +43,18 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:shadow-none">
-        Usage history and billing will appear here once billing is enabled.
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-card dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+          Privacy &amp; data
+        </h2>
+        <PrivacyControls initialSaveHistory={ctx.saveHistory} />
+        <p className="mt-5 border-t border-slate-200 pt-4 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
+          Read our{" "}
+          <Link href="/privacy" className="underline hover:text-brand-600">Privacy</Link>,{" "}
+          <Link href="/terms" className="underline hover:text-brand-600">Terms</Link>, and{" "}
+          <Link href="/ethics" className="underline hover:text-brand-600">Ethical use &amp; truthfulness</Link>{" "}
+          policies.
+        </p>
       </div>
       </main>
     </>

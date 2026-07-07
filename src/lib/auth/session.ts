@@ -24,15 +24,23 @@ export interface UserContext {
   planKey: string;
   plan: PlanDef;
   credits: number;
+  saveHistory: boolean;
 }
 
 export async function getUserContext(): Promise<UserContext | null> {
   const user = await getSessionUser();
   if (!user) return null;
-  const [sub, bal] = await Promise.all([
+  const [sub, bal, row] = await Promise.all([
     prisma.subscription.findUnique({ where: { userId: user.id } }),
     prisma.creditBalance.findUnique({ where: { userId: user.id } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { saveHistory: true } }),
   ]);
   const planKey = sub?.planKey ?? "free";
-  return { user, planKey, plan: getPlan(planKey), credits: bal?.credits ?? 0 };
+  return {
+    user,
+    planKey,
+    plan: getPlan(planKey),
+    credits: bal?.credits ?? 0,
+    saveHistory: row?.saveHistory ?? true,
+  };
 }

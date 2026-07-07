@@ -100,6 +100,11 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
           Sign in
         </Link>
       </p>
+      <p className="text-center text-xs text-slate-500">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-brand-400">Terms</Link> and{" "}
+        <Link href="/privacy" className="underline hover:text-brand-400">Privacy Policy</Link>.
+      </p>
     </div>
   );
 }

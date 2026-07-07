@@ -235,8 +235,10 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link href="/pricing" className="hover:text-white">Pricing</Link>
+            <Link href="/ethics" className="hover:text-white">Ethics</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/signin" className="hover:text-white">Sign in</Link>
-            <Link href="/signup" className="hover:text-white">Get started</Link>
           </div>
           <div className="text-xs">Improves your real experience — never fabricates it.</div>
         </div>

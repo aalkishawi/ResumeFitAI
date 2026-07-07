@@ -53,21 +53,24 @@ export async function POST(req: NextRequest) {
   try {
     const result = await runPipeline({ resume, jobDescription, instruction, mode });
 
-    // Charge + persist (with saved work for history) only for fresh runs.
+    // Charge + persist only for fresh runs. The run's cost/token metadata is
+    // always recorded; the resume/JD/result text is stored only if the user
+    // has "save to history" enabled (privacy-first opt-out).
     let credits = ctx.credits;
     if (result.usage && !result.usage.cached) {
+      const save = ctx.saveHistory;
       credits = await chargeForRun({
         userId: ctx.user.id,
         plan: ctx.plan,
         mode,
         usage: result.usage,
         inputHash: cacheKey({ resume, jobDescription, instruction, mode }),
-        title: result.jd.jobTitle || "Tailored resume",
         scoreOverall: result.scoreAfter.overall,
-        resume,
-        jobDescription,
-        instruction,
-        resultJson: JSON.stringify(result),
+        title: save ? result.jd.jobTitle || "Tailored resume" : undefined,
+        resume: save ? resume : undefined,
+        jobDescription: save ? jobDescription : undefined,
+        instruction: save ? instruction : undefined,
+        resultJson: save ? JSON.stringify(result) : undefined,
       });
     }
 
