@@ -52,7 +52,7 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30"
         />
         <input
           type="password"
@@ -60,9 +60,9 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/30"
         />
-        {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
         <button
           type="submit"
           disabled={busy}
@@ -72,7 +72,7 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-400">
         New here?{" "}
         <Link href="/signup" className="font-medium text-brand-600 hover:underline">
           Create an account
