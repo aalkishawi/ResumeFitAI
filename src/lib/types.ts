@@ -125,6 +125,34 @@ export interface InterviewCoachResult {
   salaryTalkingPoints: string[];
 }
 
+export interface LinkedInResult {
+  headline: string;
+  about: string;
+  experienceBullets: string[];
+  skills: string[];
+}
+
+export interface RecruiterReview {
+  overallScore: number;
+  verdict: string;
+  redFlags: string[];
+  unclearBullets: string[];
+  missing: string[];
+  strengths: string[];
+}
+
+export interface AtsIssue {
+  severity: string;
+  label: string;
+  detail: string;
+}
+
+export interface AtsCheckResult {
+  score: number;
+  issues: AtsIssue[];
+  recommendations: string[];
+}
+
 /** Combined result returned by POST /api/analyze. */
 export interface AnalysisResult {
   instruction: InstructionAnalysis;

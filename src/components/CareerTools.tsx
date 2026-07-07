@@ -4,8 +4,21 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FileText, MessagesSquare, Lock, Sparkles } from "lucide-react";
-import type { InterviewCoachResult } from "@/lib/types";
+import {
+  FileText,
+  MessagesSquare,
+  Lock,
+  Sparkles,
+  Linkedin,
+  ClipboardCheck,
+  ScanSearch,
+} from "lucide-react";
+import type {
+  InterviewCoachResult,
+  LinkedInResult,
+  RecruiterReview,
+  AtsCheckResult,
+} from "@/lib/types";
 import { Spinner, cx } from "./ui";
 
 interface Me {
@@ -15,7 +28,7 @@ interface Me {
   features?: string[];
 }
 
-type ToolId = "cover_letter" | "interview";
+type ToolId = "cover_letter" | "interview" | "linkedin" | "recruiter" | "ats";
 
 const TOOLS: {
   id: ToolId;
@@ -41,6 +54,30 @@ const TOOLS: {
     desc: "Likely questions, STAR answers, and negotiation points.",
     icon: <MessagesSquare size={16} />,
   },
+  {
+    id: "linkedin",
+    feature: "linkedin",
+    endpoint: "/api/tools/linkedin",
+    title: "LinkedIn Optimizer",
+    desc: "Headline, About section, bullets, and skills.",
+    icon: <Linkedin size={16} />,
+  },
+  {
+    id: "recruiter",
+    feature: "recruiter_review",
+    endpoint: "/api/tools/recruiter",
+    title: "Recruiter Review",
+    desc: "A recruiter's honest take, red flags, and gaps.",
+    icon: <ClipboardCheck size={16} />,
+  },
+  {
+    id: "ats",
+    feature: "ats_checker",
+    endpoint: "/api/tools/ats",
+    title: "ATS Checker",
+    desc: "Formatting risks and ATS-safe fixes.",
+    icon: <ScanSearch size={16} />,
+  },
 ];
 
 export function CareerTools({
@@ -59,6 +96,9 @@ export function CareerTools({
   >({});
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [interview, setInterview] = useState<InterviewCoachResult | null>(null);
+  const [linkedin, setLinkedin] = useState<LinkedInResult | null>(null);
+  const [recruiter, setRecruiter] = useState<RecruiterReview | null>(null);
+  const [ats, setAts] = useState<AtsCheckResult | null>(null);
 
   useEffect(() => {
     fetch("/api/me")
@@ -89,6 +129,9 @@ export function CareerTools({
       }
       if (tool.id === "cover_letter") setCoverLetter(data.result.coverLetter);
       if (tool.id === "interview") setInterview(data.result as InterviewCoachResult);
+      if (tool.id === "linkedin") setLinkedin(data.result as LinkedInResult);
+      if (tool.id === "recruiter") setRecruiter(data.result as RecruiterReview);
+      if (tool.id === "ats") setAts(data.result as AtsCheckResult);
       if (data.account && me) setMe({ ...me, ...data.account });
     } catch {
       setErrors((e) => ({ ...e, [tool.id]: { msg: "Network error. Please try again." } }));
@@ -213,6 +256,140 @@ export function CareerTools({
           ) : null}
         </div>
       ) : null}
+
+      {linkedin ? (
+        <div className="mt-5 space-y-3">
+          <h4 className="text-sm font-semibold text-slate-800">LinkedIn optimization</h4>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Headline</div>
+            <p className="mt-1 text-sm text-slate-700">{linkedin.headline}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">About</div>
+            <div className="prose prose-sm mt-1 max-w-none text-slate-700">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{linkedin.about}</ReactMarkdown>
+            </div>
+          </div>
+          {linkedin.experienceBullets.length ? (
+            <ListCard title="Suggested experience bullets" items={linkedin.experienceBullets} />
+          ) : null}
+          {linkedin.skills.length ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Skills</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {linkedin.skills.map((s, i) => (
+                  <span key={i} className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {recruiter ? (
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center gap-3">
+            <h4 className="text-sm font-semibold text-slate-800">Recruiter review</h4>
+            <span
+              className={cx(
+                "rounded-full px-2.5 py-0.5 text-xs font-bold",
+                recruiter.overallScore >= 75
+                  ? "bg-emerald-100 text-emerald-700"
+                  : recruiter.overallScore >= 50
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-rose-100 text-rose-700"
+              )}
+            >
+              {recruiter.overallScore}/100
+            </span>
+          </div>
+          {recruiter.verdict ? (
+            <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              {recruiter.verdict}
+            </p>
+          ) : null}
+          {recruiter.strengths.length ? <ListCard title="Strengths" items={recruiter.strengths} tone="ok" /> : null}
+          {recruiter.redFlags.length ? <ListCard title="Red flags" items={recruiter.redFlags} tone="bad" /> : null}
+          {recruiter.unclearBullets.length ? <ListCard title="Unclear bullets" items={recruiter.unclearBullets} /> : null}
+          {recruiter.missing.length ? <ListCard title="Missing / to strengthen" items={recruiter.missing} /> : null}
+        </div>
+      ) : null}
+
+      {ats ? (
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center gap-3">
+            <h4 className="text-sm font-semibold text-slate-800">ATS check</h4>
+            <span
+              className={cx(
+                "rounded-full px-2.5 py-0.5 text-xs font-bold",
+                ats.score >= 75
+                  ? "bg-emerald-100 text-emerald-700"
+                  : ats.score >= 50
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-rose-100 text-rose-700"
+              )}
+            >
+              {ats.score}/100
+            </span>
+          </div>
+          {ats.issues.length ? (
+            <div className="space-y-2">
+              {ats.issues.map((issue, i) => (
+                <div key={i} className="rounded-xl border border-slate-200 p-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cx(
+                        "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                        issue.severity === "high"
+                          ? "bg-rose-100 text-rose-700"
+                          : issue.severity === "medium"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-slate-100 text-slate-500"
+                      )}
+                    >
+                      {issue.severity}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-800">{issue.label}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{issue.detail}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {ats.recommendations.length ? <ListCard title="Recommendations" items={ats.recommendations} tone="ok" /> : null}
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function ListCard({
+  title,
+  items,
+  tone,
+}: {
+  title: string;
+  items: string[];
+  tone?: "ok" | "bad";
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</div>
+      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600">
+        {items.map((it, i) => (
+          <li
+            key={i}
+            className={cx(
+              tone === "ok" && "marker:text-emerald-500",
+              tone === "bad" && "marker:text-rose-500"
+            )}
+          >
+            {it}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
