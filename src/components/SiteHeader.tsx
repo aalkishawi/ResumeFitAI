@@ -38,6 +38,12 @@ export function SiteHeader() {
                 Open app
               </Link>
               <Link
+                href="/billing"
+                className="rounded-lg px-3 py-1.5 font-medium text-slate-200 hover:bg-white/10 hover:text-white"
+              >
+                Billing
+              </Link>
+              <Link
                 href="/account"
                 className="hidden rounded-lg px-3 py-1.5 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:inline"
               >
