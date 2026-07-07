@@ -30,17 +30,28 @@ export interface UserContext {
 export async function getUserContext(): Promise<UserContext | null> {
   const user = await getSessionUser();
   if (!user) return null;
-  const [sub, bal, row] = await Promise.all([
+  const [sub, bal] = await Promise.all([
     prisma.subscription.findUnique({ where: { userId: user.id } }),
     prisma.creditBalance.findUnique({ where: { userId: user.id } }),
-    prisma.user.findUnique({ where: { id: user.id }, select: { saveHistory: true } }),
   ]);
+  // Fetch the privacy preference defensively: a transient DB error (or a stale
+  // Prisma client that predates this column) must never sign the user out.
+  let saveHistory = true;
+  try {
+    const row = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { saveHistory: true },
+    });
+    saveHistory = row?.saveHistory ?? true;
+  } catch {
+    saveHistory = true;
+  }
   const planKey = sub?.planKey ?? "free";
   return {
     user,
     planKey,
     plan: getPlan(planKey),
     credits: bal?.credits ?? 0,
-    saveHistory: row?.saveHistory ?? true,
+    saveHistory,
   };
 }
