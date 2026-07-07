@@ -26,7 +26,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "resume", label: "Tailored Resume", icon: <FileCheck2 size={16} /> },
   { key: "keywords", label: "Keyword Gaps", icon: <KeyRound size={16} /> },
   { key: "changes", label: "Changes Made", icon: <ListChecks size={16} /> },
-  { key: "interview", label: "Interview Prep", icon: <MessagesSquare size={16} /> },
+  { key: "interview", label: "Talking Points", icon: <MessagesSquare size={16} /> },
   { key: "export", label: "Export", icon: <Download size={16} /> },
 ];
 
