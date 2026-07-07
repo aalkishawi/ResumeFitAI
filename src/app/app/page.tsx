@@ -180,6 +180,9 @@ export default function AppPage() {
         title="Tailor a resume"
         subtitle="Ethical, ATS-friendly resume tailoring — your real experience, at its best."
       >
+        <Link href="/app/jobs" className={darkBtn}>
+          <Briefcase size={15} /> Jobs
+        </Link>
         <Link href="/app/history" className={darkBtn}>
           <HistoryIcon size={15} /> History
         </Link>
