@@ -9,32 +9,41 @@ export function SiteHeader() {
   const user = session?.user;
 
   return (
-    <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-lg shadow-brand-600/30">
             <Wand2 size={16} />
           </span>
-          <span className="text-sm font-bold tracking-tight text-slate-900">
-            ResumeFit <span className="text-brand-600">AI</span>
+          <span className="text-sm font-bold tracking-tight text-white">
+            ResumeFit <span className="text-gradient">AI</span>
           </span>
         </Link>
 
-        <nav className="flex items-center gap-2 text-sm">
-          <Link href="/pricing" className="hidden px-3 py-1.5 text-slate-500 hover:text-slate-800 sm:inline">
+        <nav className="flex items-center gap-1 text-sm">
+          <Link
+            href="/pricing"
+            className="hidden rounded-lg px-3 py-1.5 text-slate-300 hover:bg-white/10 hover:text-white sm:inline"
+          >
             Pricing
           </Link>
           {status === "loading" ? null : user ? (
             <>
               <Link
+                href="/app"
+                className="rounded-lg px-3 py-1.5 font-medium text-slate-200 hover:bg-white/10 hover:text-white"
+              >
+                Open app
+              </Link>
+              <Link
                 href="/account"
-                className="rounded-lg px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-50"
+                className="hidden rounded-lg px-3 py-1.5 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:inline"
               >
                 {user.name || user.email}
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 font-medium text-slate-500 hover:bg-slate-50"
+                className="rounded-lg border border-white/15 px-3 py-1.5 font-medium text-slate-200 hover:bg-white/10"
               >
                 Sign out
               </button>
@@ -43,15 +52,15 @@ export function SiteHeader() {
             <>
               <Link
                 href="/signin"
-                className="rounded-lg px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-50"
+                className="rounded-lg px-3 py-1.5 font-medium text-slate-200 hover:bg-white/10 hover:text-white"
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-white hover:bg-brand-700"
+                className="rounded-lg bg-brand-600 px-3.5 py-1.5 font-semibold text-white shadow-lg shadow-brand-600/20 hover:bg-brand-500"
               >
-                Sign up
+                Get started
               </Link>
             </>
           )}

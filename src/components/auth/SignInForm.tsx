@@ -8,7 +8,7 @@ import { signIn } from "next-auth/react";
 export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/";
+  const callbackUrl = params.get("callbackUrl") || "/app";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

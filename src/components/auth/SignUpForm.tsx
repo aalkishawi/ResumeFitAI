@@ -35,7 +35,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
         router.push("/signin");
         return;
       }
-      router.push("/");
+      router.push("/app");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -48,7 +48,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
       {googleEnabled ? (
         <>
           <button
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={() => signIn("google", { callbackUrl: "/app" })}
             className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Continue with Google
