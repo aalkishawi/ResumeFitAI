@@ -22,10 +22,10 @@ export default async function AccountPage() {
           <div className="mt-1 text-lg font-semibold text-slate-900">{ctx.plan.name}</div>
           <div className="mt-1 text-sm text-slate-500">{ctx.plan.tagline}</div>
           <Link
-            href="/pricing"
+            href="/billing"
             className="mt-4 inline-block rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
           >
-            {ctx.planKey === "free" ? "Upgrade plan" : "Manage plan"}
+            {ctx.planKey === "free" ? "Upgrade plan" : "Billing & credits"}
           </Link>
         </div>
 

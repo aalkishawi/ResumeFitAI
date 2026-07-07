@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { PLAN_DEFS, type FeatureKey } from "@/lib/config/plans";
 import { getUserContext } from "@/lib/auth/session";
+import { isStripeConfigured } from "@/lib/billing/stripe";
+import { CheckoutButton } from "@/components/billing/CheckoutButton";
 
 export const metadata = { title: "Pricing — ResumeFit AI" };
 export const dynamic = "force-dynamic";
@@ -33,6 +35,7 @@ function price(cents: number): string {
 export default async function PricingPage() {
   const ctx = await getUserContext();
   const currentPlan = ctx?.planKey;
+  const configured = isStripeConfigured();
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -83,20 +86,38 @@ export default async function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                href={ctx ? "/account" : "/signup"}
-                className={
-                  "mt-5 rounded-lg px-3.5 py-2 text-center text-sm font-semibold " +
+              {(() => {
+                const cls =
+                  "mt-5 block rounded-lg px-3.5 py-2 text-center text-sm font-semibold " +
                   (isCurrent
                     ? "cursor-default bg-slate-100 text-slate-400"
                     : highlight
                     ? "bg-brand-600 text-white hover:bg-brand-700"
-                    : "border border-slate-200 text-slate-700 hover:bg-slate-50")
+                    : "border border-slate-200 text-slate-700 hover:bg-slate-50");
+                if (isCurrent) {
+                  return <span className={cls}>Current plan</span>;
                 }
-                aria-disabled={isCurrent}
-              >
-                {isCurrent ? "Current plan" : plan.priceMonthlyCents === 0 ? "Get started" : "Upgrade"}
-              </Link>
+                if (plan.priceMonthlyCents === 0) {
+                  return (
+                    <Link href={ctx ? "/account" : "/signup"} className={cls}>
+                      Get started
+                    </Link>
+                  );
+                }
+                // Paid plan
+                if (ctx && configured) {
+                  return (
+                    <CheckoutButton plan={plan.key} className={cls}>
+                      Upgrade
+                    </CheckoutButton>
+                  );
+                }
+                return (
+                  <Link href={ctx ? "/billing" : "/signup"} className={cls}>
+                    Upgrade
+                  </Link>
+                );
+              })()}
             </div>
           );
         })}
