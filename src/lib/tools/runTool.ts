@@ -8,6 +8,7 @@ import {
   RunNotAllowedError,
 } from "@/lib/billing/usage";
 import { describeApiError } from "@/lib/ai/client";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import type { FeatureKey } from "@/lib/config/plans";
 import type { RunUsage } from "@/lib/ai/cost";
 
@@ -26,6 +27,9 @@ export async function handleTool<T>(
     generate: (input: ToolRequest) => Promise<{ payload: T; usage: RunUsage }>;
   }
 ): Promise<NextResponse> {
+  const limited = enforceRateLimit(req, "tools", RATE_LIMITS.tools.limit, RATE_LIMITS.tools.windowMs);
+  if (limited) return limited;
+
   const body = await req.json().catch(() => null);
   const parsed = toolRequestSchema.safeParse(body);
   if (!parsed.success) {

@@ -5,12 +5,16 @@ import { MissingApiKeyError, describeApiError } from "@/lib/ai/client";
 import { getUserContext } from "@/lib/auth/session";
 import { assertCanRun, chargeForRun, RunNotAllowedError } from "@/lib/billing/usage";
 import { cacheKey } from "@/lib/ai/cache";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 // AI + document parsing require the Node runtime (not Edge).
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
+  const limited = enforceRateLimit(req, "analyze", RATE_LIMITS.analyze.limit, RATE_LIMITS.analyze.windowMs);
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await req.json();

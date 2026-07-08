@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { getUserContext } from "@/lib/auth/session";
 import { getStripe, isStripeConfigured } from "@/lib/billing/stripe";
 import { subscriptionPriceId, creditPackById } from "@/lib/billing/catalog";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,9 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const limited = enforceRateLimit(req, "billing", RATE_LIMITS.billing.limit, RATE_LIMITS.billing.windowMs);
+  if (limited) return limited;
+
   const ctx = await getUserContext();
   if (!ctx) {
     return NextResponse.json({ error: "Please sign in first." }, { status: 401 });

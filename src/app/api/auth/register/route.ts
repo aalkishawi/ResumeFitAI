@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { provisionNewUser } from "@/lib/auth/provision";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,9 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const limited = enforceRateLimit(req, "register", RATE_LIMITS.register.limit, RATE_LIMITS.register.windowMs);
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await req.json();
