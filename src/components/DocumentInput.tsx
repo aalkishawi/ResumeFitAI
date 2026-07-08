@@ -100,8 +100,10 @@ export function DocumentInput({ kind, label, placeholder, value, onChange, icon 
   return (
     <div
       className={cx(
-        "flex h-full flex-col rounded-2xl border bg-white p-4 shadow-card transition",
-        dragging ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
+        "flex h-full flex-col rounded-2xl border bg-white p-4 shadow-card transition dark:bg-white/[0.04] dark:shadow-none",
+        dragging
+          ? "border-brand-400 ring-2 ring-brand-100 dark:ring-brand-500/30"
+          : "border-slate-200 dark:border-white/10"
       )}
       onDragOver={(e) => {
         e.preventDefault();
@@ -112,13 +114,13 @@ export function DocumentInput({ kind, label, placeholder, value, onChange, icon 
     >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-brand-600">{icon ?? <FileText size={18} />}</span>
-          <h2 className="text-sm font-semibold text-slate-800">{label}</h2>
+          <span className="text-brand-600 dark:text-brand-400">{icon ?? <FileText size={18} />}</span>
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</h2>
         </div>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
         >
           <UploadCloud size={14} /> Upload
         </button>
@@ -178,7 +180,7 @@ export function DocumentInput({ kind, label, placeholder, value, onChange, icon 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="scroll-tidy min-h-[220px] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+        className="scroll-tidy min-h-[220px] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-brand-400 dark:focus:ring-brand-500/30"
       />
 
       <div className="mt-2 flex items-center justify-between text-xs text-slate-400">

@@ -85,7 +85,7 @@ export function ExportTab({ result }: { result: AnalysisResult }) {
     <div className="space-y-5">
       <Block title="Download your tailored resume">
         {requested !== "unspecified" ? (
-          <p className="mb-4 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+          <p className="mb-4 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
             You asked for{" "}
             <strong>
               {requested === "both" ? "both DOCX and PDF" : requested.toUpperCase()}
@@ -109,15 +109,15 @@ export function ExportTab({ result }: { result: AnalysisResult }) {
                 className={cx(
                   "flex items-center gap-3 rounded-xl border p-4 text-left transition disabled:opacity-60",
                   isRec
-                    ? "border-brand-300 bg-brand-50/50 hover:bg-brand-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
+                    ? "border-brand-300 bg-brand-50/50 hover:bg-brand-50 dark:border-brand-500/40 dark:bg-brand-500/10 dark:hover:bg-brand-500/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                 )}
               >
                 <span className={cx("shrink-0", isRec ? "text-brand-600" : "text-slate-500")}>
                   {busy === f.key ? <Spinner className="h-5 w-5" /> : f.icon}
                 </span>
                 <span className="flex-1">
-                  <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
                     {f.label}
                     {isRec ? (
                       <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-700">
@@ -135,7 +135,7 @@ export function ExportTab({ result }: { result: AnalysisResult }) {
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={copy}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           >
             {copied ? <Check size={15} /> : <Clipboard size={15} />}
             {copied ? "Copied to clipboard" : "Copy resume text"}

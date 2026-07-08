@@ -17,6 +17,7 @@ import { KeywordGapsTab } from "./tabs/KeywordGapsTab";
 import { ChangesTab } from "./tabs/ChangesTab";
 import { InterviewTab } from "./tabs/InterviewTab";
 import { ExportTab } from "./tabs/ExportTab";
+import { CareerTools } from "./CareerTools";
 
 type TabKey = "analysis" | "resume" | "keywords" | "changes" | "interview" | "export";
 
@@ -25,17 +26,25 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "resume", label: "Tailored Resume", icon: <FileCheck2 size={16} /> },
   { key: "keywords", label: "Keyword Gaps", icon: <KeyRound size={16} /> },
   { key: "changes", label: "Changes Made", icon: <ListChecks size={16} /> },
-  { key: "interview", label: "Interview Prep", icon: <MessagesSquare size={16} /> },
+  { key: "interview", label: "Talking Points", icon: <MessagesSquare size={16} /> },
   { key: "export", label: "Export", icon: <Download size={16} /> },
 ];
 
-export function ResultsView({ result }: { result: AnalysisResult }) {
+export function ResultsView({
+  result,
+  resume = "",
+  jobDescription = "",
+}: {
+  result: AnalysisResult;
+  resume?: string;
+  jobDescription?: string;
+}) {
   const [tab, setTab] = useState<TabKey>("analysis");
   const flagCount = result.unsupportedClaims.length;
 
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-1 mb-5 overflow-x-auto scroll-tidy bg-slate-50/80 px-1 py-2 backdrop-blur">
+      <div className="sticky top-0 z-10 -mx-1 mb-5 overflow-x-auto scroll-tidy bg-slate-50/80 px-1 py-2 backdrop-blur dark:bg-slate-950/50">
         <div className="flex gap-1.5">
           {TABS.map((t) => (
             <button
@@ -45,7 +54,7 @@ export function ResultsView({ result }: { result: AnalysisResult }) {
                 "inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium transition",
                 tab === t.key
                   ? "bg-brand-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
               )}
             >
               {t.icon}
@@ -68,6 +77,14 @@ export function ResultsView({ result }: { result: AnalysisResult }) {
         {tab === "interview" && <InterviewTab result={result} />}
         {tab === "export" && <ExportTab result={result} />}
       </div>
+
+      {resume && jobDescription ? (
+        <CareerTools
+          resume={resume}
+          jobDescription={jobDescription}
+          tailoredResume={result.tailoredResume}
+        />
+      ) : null}
     </div>
   );
 }

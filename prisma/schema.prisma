@@ -1,0 +1,245 @@
+// ResumeFit AI — data model.
+//
+// Datasource is SQLite for zero-infra self-hosting. To move to Postgres later,
+// change `provider` to "postgresql" and point DATABASE_URL at your database —
+// the models below are written to port cleanly (String status/role fields
+// instead of DB enums, so nothing is SQLite-specific).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- Auth (NextAuth / Auth.js compatible) ----------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  passwordHash  String? // null for OAuth-only users
+  role          String    @default("user") // user | admin
+  saveHistory   Boolean   @default(true) // privacy: persist resume/JD/result to history
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+  creditBalance CreditBalance?
+  runs          ResumeRun[]
+  exports       ExportedDocument[]
+  usageLogs     UsageLog[]
+  ownedTeams    Team[]             @relation("TeamOwner")
+  memberships   TeamMember[]
+  applications  JobApplication[]
+}
+
+model JobApplication {
+  id          String    @id @default(cuid())
+  userId      String
+  company     String
+  role        String
+  status      String    @default("saved") // saved | applied | interview | offer | rejected
+  appliedAt   DateTime?
+  url         String?
+  notes       String?
+  resumeRunId String? // the tailored resume version used (ResumeRun id)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- Billing / plans -------------------------------------------------------
+
+model Plan {
+  id                String   @id @default(cuid())
+  key               String   @unique // free | basic | pro | premium | team
+  name              String
+  priceMonthlyCents Int      @default(0)
+  monthlyScans      Int      @default(3) // -1 = unlimited
+  monthlyCredits    Int      @default(0) // credits granted each period
+  features          String   @default("[]") // JSON array of feature keys
+  stripePriceId     String?
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  planKey              String    @default("free")
+  status               String    @default("active") // active | trialing | past_due | canceled
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CreditBalance {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  credits   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- Product usage ---------------------------------------------------------
+
+model ResumeRun {
+  id           String   @id @default(cuid())
+  userId       String?
+  mode         String   @default("balanced")
+  inputHash    String
+  costUsd      Float    @default(0)
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  cached       Boolean  @default(false)
+  creditsUsed  Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Saved work (history). Present for signed-in users so runs can be reopened.
+  title          String?
+  scoreOverall   Int     @default(0)
+  resume         String?
+  jobDescription String?
+  instruction    String?
+  resultJson     String? // full AnalysisResult JSON
+
+  user     User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  costLogs CostLog[]
+  exports  ExportedDocument[]
+
+  @@index([userId, createdAt])
+}
+
+model CostLog {
+  id           String   @id @default(cuid())
+  runId        String?
+  task         String
+  provider     String
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Float    @default(0)
+  createdAt    DateTime @default(now())
+
+  run ResumeRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model ExportedDocument {
+  id        String   @id @default(cuid())
+  userId    String?
+  runId     String?
+  format    String // docx | pdf | txt | md
+  filename  String
+  createdAt DateTime @default(now())
+
+  user User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  run  ResumeRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+}
+
+model UsageLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String // scan | export | cover_letter | linkedin | interview | ...
+  quantity  Int      @default(1)
+  meta      String   @default("{}") // JSON
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+// --- Teams / B2B / white-label ---------------------------------------------
+
+model Team {
+  id           String  @id @default(cuid())
+  name         String
+  ownerId      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner       User                @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  whiteLabel  WhiteLabelSettings?
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member") // owner | admin | member
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model WhiteLabelSettings {
+  id             String   @id @default(cuid())
+  teamId         String   @unique
+  brandName      String   @default("ResumeFit AI")
+  logoUrl        String?
+  primaryColor   String   @default("#2563eb")
+  secondaryColor String   @default("#7c3aed")
+  domain         String?
+  footerText     String?
+  supportEmail   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}

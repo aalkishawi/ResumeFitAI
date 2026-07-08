@@ -1,278 +1,248 @@
-"use client";
-
-import React, { useRef, useState } from "react";
+import Link from "next/link";
 import {
-  Briefcase,
-  FileText,
-  Lock,
-  MessageSquareText,
-  Sparkles,
   Wand2,
+  FileCheck2,
+  KeyRound,
+  MessagesSquare,
+  Linkedin,
+  ScanSearch,
+  ShieldCheck,
+  ArrowRight,
+  Check,
+  Sparkles,
 } from "lucide-react";
-import { DocumentInput } from "@/components/DocumentInput";
-import { ResultsView } from "@/components/ResultsView";
-import { Spinner, cx } from "@/components/ui";
-import type { AnalysisResult } from "@/lib/types";
-import {
-  SAMPLE_INSTRUCTION,
-  SAMPLE_JOB_DESCRIPTION,
-  SAMPLE_RESUME,
-} from "@/data/sample";
+import { PLAN_DEFS } from "@/lib/config/plans";
 
-const LOADING_STEPS = [
-  "Analyzing your instruction…",
-  "Parsing the job description…",
-  "Mapping your resume against the role…",
-  "Scoring the current match…",
-  "Tailoring your resume (truthfully)…",
-  "Running the truthfulness check…",
+export const metadata = {
+  title: "ResumeFit AI — Tailor every resume to every job",
+  description:
+    "AI-powered resume optimization for ATS alignment, recruiter readability, and interview readiness. Ethical: improves your real experience, never fabricates it.",
+};
+
+const FEATURES = [
+  { icon: <FileCheck2 size={20} />, title: "AI Resume Tailoring", desc: "Rewrite your resume for a specific job — clearer, aligned, and ATS-friendly." },
+  { icon: <ScanSearch size={20} />, title: "ATS Compatibility Check", desc: "Spot formatting and parsing risks, with concrete fixes recruiters' systems reward." },
+  { icon: <KeyRound size={20} />, title: "Keyword Gap Analysis", desc: "See exactly which job-description keywords your resume is missing or underusing." },
+  { icon: <FileCheck2 size={20} />, title: "Cover Letter Generator", desc: "A tailored, truthful cover letter grounded in your real experience." },
+  { icon: <MessagesSquare size={20} />, title: "Interview Coach", desc: "Likely questions, STAR answers, and salary-negotiation talking points." },
+  { icon: <Linkedin size={20} />, title: "LinkedIn Optimizer", desc: "A recruiter-ready headline, About section, and improved experience bullets." },
 ];
 
-export default function HomePage() {
-  const [resume, setResume] = useState("");
-  const [jd, setJd] = useState("");
-  const [instruction, setInstruction] = useState("");
+const STEPS = [
+  { n: "1", title: "Paste your resume & the job", desc: "Upload a PDF/DOCX or paste text. Add an optional instruction." },
+  { n: "2", title: "AI tailors it — truthfully", desc: "We align your real experience to the role. No invented skills or metrics." },
+  { n: "3", title: "Download & prepare", desc: "Export DOCX/PDF, generate a cover letter, and prep for the interview." },
+];
 
-  const [loading, setLoading] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+const FAQS = [
+  { q: "Does this fabricate experience to beat the ATS?", a: "No. ResumeFit only rephrases and reorganizes your real experience for clarity and job alignment. It flags any claim it can't support from your resume." },
+  { q: "Is it really ATS-friendly?", a: "We improve ATS compatibility — clean structure, standard sections, keyword alignment — and flag formatting risks. No tool can guarantee passing every ATS." },
+  { q: "Do you store my resume?", a: "Your tailored resumes are saved to your account history so you can revisit them, and you can delete any run at any time. We never sell your data or use it to train models." },
+  { q: "Which AI models do you use?", a: "A cost-routed mix: fast, affordable models for analysis and stronger models for tailoring. Premium unlocks our most capable model; Local mode can run on your own server." },
+];
 
-  const resultsRef = useRef<HTMLDivElement>(null);
-  const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const canSubmit =
-    resume.trim().length >= 40 && jd.trim().length >= 40 && !loading;
-
-  const loadSample = () => {
-    setResume(SAMPLE_RESUME);
-    setJd(SAMPLE_JOB_DESCRIPTION);
-    setInstruction(SAMPLE_INSTRUCTION);
-    setError(null);
-  };
-
-  const reset = () => {
-    setResume("");
-    setJd("");
-    setInstruction("");
-    setResult(null);
-    setError(null);
-  };
-
-  const startStepAnimation = () => {
-    setStepIndex(0);
-    stepTimer.current = setInterval(() => {
-      setStepIndex((i) => Math.min(i + 1, LOADING_STEPS.length - 1));
-    }, 2500);
-  };
-  const stopStepAnimation = () => {
-    if (stepTimer.current) clearInterval(stepTimer.current);
-    stepTimer.current = null;
-  };
-
-  const analyze = async () => {
-    setError(null);
-    setResult(null);
-    setLoading(true);
-    startStepAnimation();
-    try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resume, jobDescription: jd, instruction }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setResult(data.result as AnalysisResult);
-      setTimeout(
-        () => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-        100
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
-      stopStepAnimation();
-    }
-  };
+export default function LandingPage() {
+  const free = PLAN_DEFS.find((p) => p.key === "free")!;
+  const pro = PLAN_DEFS.find((p) => p.key === "pro")!;
+  const premium = PLAN_DEFS.find((p) => p.key === "premium")!;
+  const teaser = [free, pro, premium];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6">
-      {/* Header */}
-      <header className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-            <Wand2 size={22} />
+    <div className="bg-slate-950 text-slate-100">
+      {/* Hero */}
+      <section className="hero-glow relative overflow-hidden">
+        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+            <Sparkles size={13} className="text-brand-400" /> Ethical AI career assistant
+          </span>
+          <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+            Tailor every resume to <span className="text-gradient">every job</span> — in minutes.
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-300">
+            AI-powered resume optimization for ATS alignment, recruiter readability, and interview
+            readiness. It improves your real experience — it never invents it.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/signup" className="btn-primary">
+              Get started free <ArrowRight size={16} />
+            </Link>
+            <Link href="#how" className="btn-ghost">
+              See how it works
+            </Link>
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">
-              ResumeFit <span className="text-brand-600">AI</span>
-            </h1>
-            <p className="text-sm text-slate-500">
-              Ethical, ATS-friendly resume tailoring — your real experience, at its best.
-            </p>
-          </div>
+          <p className="mt-4 text-xs text-slate-400">
+            3 free tailored resumes every month · No credit card required
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={loadSample}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            <Sparkles size={15} /> Load sample data
-          </button>
-          <button
-            onClick={reset}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
-          >
-            Clear
-          </button>
-        </div>
-      </header>
-
-      {/* Three-input layout */}
-      <section className="grid gap-4 lg:grid-cols-2">
-        <DocumentInput
-          kind="resume"
-          label="Your Resume"
-          placeholder="Paste your resume here, or upload a PDF / DOCX / TXT / Markdown file…"
-          value={resume}
-          onChange={setResume}
-          icon={<FileText size={18} />}
-        />
-        <DocumentInput
-          kind="jd"
-          label="Job Description"
-          placeholder="Paste the job description here, or upload a file…"
-          value={jd}
-          onChange={setJd}
-          icon={<Briefcase size={18} />}
-        />
       </section>
 
-      {/* Instruction / chat input */}
-      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-brand-600">
-            <MessageSquareText size={18} />
-          </span>
-          <h2 className="text-sm font-semibold text-slate-800">
-            How should we tailor it? <span className="font-normal text-slate-400">(optional)</span>
-          </h2>
-        </div>
-        <textarea
-          value={instruction}
-          onChange={(e) => setInstruction(e.target.value)}
-          placeholder='e.g. "Tailor this for a CIO role, make it more executive, emphasize AI & digital transformation, keep it to two pages, and export as a Word document."'
-          className="min-h-[72px] w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-        />
-        <div className="mt-2 flex flex-wrap gap-1.5">
+      {/* Value strip */}
+      <section className="border-y border-white/10 bg-white/[0.02]">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 text-center sm:grid-cols-4 sm:px-6">
           {[
-            "Make it more executive-level",
-            "Focus on AI & digital transformation",
-            "Keep it under two pages",
-            "Emphasize project management",
-            "Export as a Word document",
-          ].map((chip) => (
-            <button
-              key={chip}
-              onClick={() =>
-                setInstruction((prev) => (prev ? `${prev.trim()} ${chip}.` : `${chip}.`))
-              }
-              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
-            >
-              + {chip}
-            </button>
+            ["ATS-ready", "Formatting checked"],
+            ["Keyword-aligned", "To the job description"],
+            ["Truthful", "Never fabricated"],
+            ["Interview-ready", "Coaching included"],
+          ].map(([h, s]) => (
+            <div key={h}>
+              <div className="text-sm font-semibold text-white">{h}</div>
+              <div className="text-xs text-slate-400">{s}</div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Action bar */}
-      <div className="mt-5 flex flex-col items-center gap-3">
-        <button
-          onClick={analyze}
-          disabled={!canSubmit}
-          className={cx(
-            "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-card transition",
-            canSubmit
-              ? "bg-brand-600 hover:bg-brand-700"
-              : "cursor-not-allowed bg-slate-300"
-          )}
-        >
-          {loading ? <Spinner className="h-4 w-4" /> : <Wand2 size={16} />}
-          {loading ? "Tailoring your resume…" : "Analyze & Tailor Resume"}
-        </button>
-        {!canSubmit && !loading ? (
-          <p className="text-xs text-slate-400">
-            Add both a resume and a job description (at least a few lines each) to continue.
+      {/* How it works */}
+      <section id="how" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <h2 className="text-center text-3xl font-bold tracking-tight">How it works</h2>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {STEPS.map((s) => (
+            <div key={s.n} className="glass rounded-2xl p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 font-bold text-white">
+                {s.n}
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-white">{s.title}</h3>
+              <p className="mt-1.5 text-sm text-slate-300">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-t border-white/10 bg-white/[0.02]">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <h2 className="text-center text-3xl font-bold tracking-tight">
+            Everything you need to land the interview
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-300">
+            One platform for tailoring, keyword analysis, ATS checks, and interview prep.
           </p>
-        ) : null}
-
-        {/* Privacy note */}
-        <p className="flex items-center gap-1.5 text-xs text-slate-400">
-          <Lock size={12} />
-          Your data is processed in-session and is <strong>not stored</strong>. Resumes can
-          contain sensitive personal information — only share what you&apos;re comfortable with.
-        </p>
-      </div>
-
-      {/* Loading state */}
-      {loading ? (
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-          <div className="flex items-center gap-3">
-            <Spinner className="h-5 w-5 text-brand-600" />
-            <span className="text-sm font-medium text-slate-700">
-              {LOADING_STEPS[stepIndex]}
-            </span>
-          </div>
-          <div className="mt-4 space-y-2">
-            {LOADING_STEPS.map((s, i) => (
-              <div
-                key={i}
-                className={cx(
-                  "flex items-center gap-2 text-xs",
-                  i < stepIndex
-                    ? "text-emerald-600"
-                    : i === stepIndex
-                    ? "text-slate-700"
-                    : "text-slate-300"
-                )}
-              >
-                <span
-                  className={cx(
-                    "h-1.5 w-1.5 rounded-full",
-                    i < stepIndex
-                      ? "bg-emerald-500"
-                      : i === stepIndex
-                      ? "bg-brand-500"
-                      : "bg-slate-200"
-                  )}
-                />
-                {s}
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="glass glass-hover rounded-2xl p-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-brand-400">
+                  {f.icon}
+                </div>
+                <h3 className="mt-4 font-semibold text-white">{f.title}</h3>
+                <p className="mt-1.5 text-sm text-slate-300">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
-      ) : null}
+      </section>
 
-      {/* Error state */}
-      {error && !loading ? (
-        <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-          <strong>Couldn&apos;t complete tailoring.</strong>
-          <p className="mt-1">{error}</p>
+      {/* Ethics / positioning */}
+      <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+          <ShieldCheck size={24} />
         </div>
-      ) : null}
+        <h2 className="mt-5 text-3xl font-bold tracking-tight">Honest by design</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-slate-300">
+          We don&apos;t help you trick hiring systems or fabricate experience. ResumeFit improves
+          clarity, ATS compatibility, and job alignment — and flags any claim it can&apos;t support
+          from your resume, so what you send is genuinely yours.
+        </p>
+      </section>
 
-      {/* Results */}
-      {result && !loading ? (
-        <section ref={resultsRef} className="mt-10">
-          <ResultsView result={result} />
-        </section>
-      ) : null}
+      {/* Pricing preview */}
+      <section className="border-t border-white/10 bg-white/[0.02]">
+        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+          <h2 className="text-center text-3xl font-bold tracking-tight">Start free. Upgrade when it pays off.</h2>
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
+            {teaser.map((p) => {
+              const featured = p.key === "pro";
+              return (
+                <div
+                  key={p.key}
+                  className={
+                    "glass rounded-2xl p-6 " +
+                    (featured ? "ring-2 ring-brand-500/50" : "")
+                  }
+                >
+                  <div className="text-sm font-semibold text-white">{p.name}</div>
+                  <div className="mt-2 text-3xl font-bold text-white">
+                    {p.priceMonthlyCents === 0 ? "Free" : `$${(p.priceMonthlyCents / 100).toFixed(0)}`}
+                    {p.priceMonthlyCents > 0 ? (
+                      <span className="text-sm font-normal text-slate-400">/mo</span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">{p.tagline}</p>
+                  <div className="mt-3 text-xs text-slate-300">
+                    {p.monthlyScans === -1 ? "Unlimited scans" : `${p.monthlyScans} scans / month`}
+                  </div>
+                  <Link
+                    href="/signup"
+                    className={
+                      "mt-5 block rounded-lg px-3.5 py-2 text-center text-sm font-semibold " +
+                      (featured
+                        ? "bg-brand-600 text-white hover:bg-brand-500"
+                        : "border border-white/15 text-slate-100 hover:bg-white/10")
+                    }
+                  >
+                    {p.priceMonthlyCents === 0 ? "Get started" : "Choose " + p.name}
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6 text-center">
+            <Link href="/pricing" className="text-sm font-medium text-brand-400 hover:underline">
+              Compare all plans →
+            </Link>
+          </div>
+        </div>
+      </section>
 
-      <footer className="mt-16 border-t border-slate-200 pt-6 text-center text-xs text-slate-400">
-        ResumeFit AI · Built to help you present your real experience truthfully and
-        effectively. Never fabricates skills, metrics, or credentials.
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+        <h2 className="text-center text-3xl font-bold tracking-tight">Frequently asked</h2>
+        <div className="mt-10 space-y-3">
+          {FAQS.map((f) => (
+            <details key={f.q} className="glass rounded-xl p-4 [&_summary]:cursor-pointer">
+              <summary className="flex items-center justify-between text-sm font-semibold text-white">
+                {f.q}
+                <Check size={16} className="text-brand-400" />
+              </summary>
+              <p className="mt-2 text-sm text-slate-300">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="hero-glow border-t border-white/10">
+        <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Turn your resume into a job-specific application package.
+          </h2>
+          <div className="mt-8">
+            <Link href="/signup" className="btn-primary">
+              Get started free <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-slate-950">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 text-white">
+              <Wand2 size={14} />
+            </span>
+            <span className="font-semibold text-slate-200">ResumeFit AI</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link href="/pricing" className="hover:text-white">Pricing</Link>
+            <Link href="/ethics" className="hover:text-white">Ethics</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
+            <Link href="/signin" className="hover:text-white">Sign in</Link>
+          </div>
+          <div className="text-xs">Improves your real experience — never fabricates it.</div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }

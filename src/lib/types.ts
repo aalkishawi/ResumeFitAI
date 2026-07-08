@@ -93,6 +93,66 @@ export interface InterviewTalkingPoint {
   sampleQuestion: string;
 }
 
+/** Per-call cost/token record surfaced to the client. */
+export interface CallUsage {
+  task: string;
+  provider: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+}
+
+/** Aggregate cost/token usage for one analyze run. */
+export interface RunUsageInfo {
+  calls: CallUsage[];
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  cached: boolean;
+  mode: string;
+}
+
+export interface InterviewQuestion {
+  question: string;
+  category: string;
+  starAnswer: string;
+}
+
+export interface InterviewCoachResult {
+  questions: InterviewQuestion[];
+  whyThisRole: string;
+  salaryTalkingPoints: string[];
+}
+
+export interface LinkedInResult {
+  headline: string;
+  about: string;
+  experienceBullets: string[];
+  skills: string[];
+}
+
+export interface RecruiterReview {
+  overallScore: number;
+  verdict: string;
+  redFlags: string[];
+  unclearBullets: string[];
+  missing: string[];
+  strengths: string[];
+}
+
+export interface AtsIssue {
+  severity: string;
+  label: string;
+  detail: string;
+}
+
+export interface AtsCheckResult {
+  score: number;
+  issues: AtsIssue[];
+  recommendations: string[];
+}
+
 /** Combined result returned by POST /api/analyze. */
 export interface AnalysisResult {
   instruction: InstructionAnalysis;
@@ -106,6 +166,8 @@ export interface AnalysisResult {
   missingSkillSuggestions: string[];
   interviewTalkingPoints: InterviewTalkingPoint[];
   unsupportedClaims: UnsupportedClaim[];
+  /** Cost/model transparency for this run (optional; present when tracked). */
+  usage?: RunUsageInfo;
 }
 
 export interface ExtractResult {

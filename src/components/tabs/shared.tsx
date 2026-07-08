@@ -16,7 +16,7 @@ export function Block({
   return (
     <Card className="p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
           {title}
         </h3>
         {right}
@@ -60,7 +60,7 @@ export function BulletList({
   return (
     <ul className="space-y-1.5">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-2 text-sm text-slate-700">
+        <li key={i} className="flex gap-2 text-sm text-slate-700 dark:text-slate-200">
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
           <span>{item}</span>
         </li>
@@ -75,7 +75,7 @@ export function KeyValue({ label, value }: { label: string; value: string }) {
       <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
         {label}
       </span>
-      <span className="text-sm text-slate-800">{value || "—"}</span>
+      <span className="text-sm text-slate-800 dark:text-slate-100">{value || "—"}</span>
     </div>
   );
 }
