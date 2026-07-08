@@ -38,6 +38,19 @@ model User {
   ownedTeams    Team[]             @relation("TeamOwner")
   memberships   TeamMember[]
   applications  JobApplication[]
+  resetTokens   PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model JobApplication {
